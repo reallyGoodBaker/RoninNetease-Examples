@@ -1,0 +1,43 @@
+{
+    "auto_hot_reload_mods": true,
+    "auto_join_game": true,
+    "debug_options": {
+        "reload_addon_key": "",
+        "reload_key": "",
+        "reload_key_global": false,
+        "reload_shaders_key": "",
+        "reload_world_key": ""
+    },
+    "do_daylight_cycle": true,
+    "do_weather_cycle": true,
+    "enable_cheats": true,
+    "experiment_options": {
+        "data_driven_biomes": false,
+        "data_driven_items": false,
+        "experimental_molang_features": false
+    },
+    "game_executable_path": "C:/MCStudioDownload/game/MinecraftPE_Netease/3.8.0.292301/Minecraft.Windows.exe",
+    "game_mode": 1,
+    "include_debug_mod": true,
+    "included_mod_dirs": [
+        "./"
+    ],
+    "keep_inventory": true,
+    "reset_world": false,
+    "skin_info": {
+        "skin": "",
+        "slim": false
+    },
+    "window_style": {
+        "always_on_top": false,
+        "fixed_position": null,
+        "fixed_size": null,
+        "hide_title_bar": false,
+        "lock_corner": null,
+        "title_bar_color": null
+    },
+    "world_folder_name": "MC_DEV_WORLD",
+    "world_name": "MC_DEV_WORLD",
+    "world_seed": null,
+    "world_type": 1
+}
