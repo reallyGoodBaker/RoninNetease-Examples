@@ -1,4 +1,4 @@
-from .architect.compact import *
+from .engine.architect.compact import *
 
 @SubsystemServer
 class AnimPlayerServer(ServerSubsystem):

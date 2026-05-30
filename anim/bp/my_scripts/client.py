@@ -1,7 +1,7 @@
-from .architect.compact import *
-from .architect.plugins.animation.components.animClient import AnimationExComponent, AnimationEasingTypes, AnimationEasingConf
-from .architect.utils.persona.client import PersonaRendererComponent
-from .architect.plugins.input.client import InputAction, InputState, InputExComponent
+from .engine.architect.compact import *
+from .engine.architect.plugins.animation.components.animClient import AnimationExComponent, AnimationEasingTypes, AnimationEasingConf
+from .engine.architect.utils.persona.client import PersonaRendererComponent
+from .engine.architect.plugins.input.client import InputAction, InputState, InputExComponent
 
 from .assets.animations import GenericMapping
 

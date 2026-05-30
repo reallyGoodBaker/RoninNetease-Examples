@@ -1,7 +1,7 @@
-from ..architect.plugins.input.enum import MouseKey, InputType, KeyboardKey, AxisSwizzleOrder, GamepadAxis, GamepadKey
-from ..architect.plugins.input.utils.mappingContext import InputMapping, InputBinding
-from ..architect.plugins.input.utils.modifier import SwizzleAxis, Negate
-from ..architect.plugins.input.utils.trigger import TriggerDown, DoubleTap, TriggerHold
+from ..engine.architect.plugins.input.enum import MouseKey, InputType, KeyboardKey, AxisSwizzleOrder, GamepadAxis, GamepadKey
+from ..engine.architect.plugins.input.utils.mappingContext import InputMapping, InputBinding
+from ..engine.architect.plugins.input.utils.modifier import SwizzleAxis, Negate
+from ..engine.architect.plugins.input.utils.trigger import TriggerDown, DoubleTap, TriggerHold
 
 
 InputMapping(

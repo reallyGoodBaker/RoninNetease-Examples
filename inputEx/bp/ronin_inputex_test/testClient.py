@@ -1,5 +1,5 @@
-from .architect.compact import *
-from .architect.plugins.input.client import InputAction, InputState, InputExComponent
+from .engine.architect.compact import *
+from .engine.architect.plugins.input.client import InputAction, InputState, InputExComponent
 
 JUMP_POWER = 0.5
 MOVE_SPEED = 0.5

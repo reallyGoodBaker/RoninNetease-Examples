@@ -1,0 +1,9 @@
+[submodule "template/bp/my_scripts/engine"]
+	path = template/bp/my_scripts/engine
+	url = https://github.com/reallyGoodBaker/RoninNetease.git
+[submodule "inputEx/bp/ronin_inputex_test/engine"]
+	path = inputEx/bp/ronin_inputex_test/engine
+	url = https://github.com/reallyGoodBaker/RoninNetease.git
+[submodule "anim/bp/my_scripts/engine"]
+	path = anim/bp/my_scripts/engine
+	url = https://github.com/reallyGoodBaker/RoninNetease.git

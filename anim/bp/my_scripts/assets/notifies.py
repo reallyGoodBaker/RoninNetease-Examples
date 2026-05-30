@@ -1,7 +1,7 @@
-from ..architect.plugins.animation.utils import BaseActionDispatcher, Dispatch
-from ..architect.plugins.animation.components.animClient import AnimationExComponent
-from ..architect.compact import *
-from ..architect.math.utils import boxOverlap3dForward
+from ..engine.architect.plugins.animation.utils import BaseActionDispatcher, Dispatch
+from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
+from ..engine.architect.compact import *
+from ..engine.architect.math.utils import boxOverlap3dForward
 
 @Dispatch('animation.standard_steve.attack.diamond')
 class DiamondAttackDispatcher(BaseActionDispatcher):

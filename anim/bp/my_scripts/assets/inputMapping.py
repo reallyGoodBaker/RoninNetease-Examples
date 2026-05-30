@@ -1,6 +1,6 @@
-from ..architect.plugins.input.utils.mappingContext import InputMapping, InputBinding
-from ..architect.plugins.input.enum import InputType, MouseKey
-from ..architect.plugins.input.utils.trigger import TriggerPressed
+from ..engine.architect.plugins.input.utils.mappingContext import InputMapping, InputBinding
+from ..engine.architect.plugins.input.enum import InputType, MouseKey
+from ..engine.architect.plugins.input.utils.trigger import TriggerPressed
 
 
 InputMapping(

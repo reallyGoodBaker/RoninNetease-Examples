@@ -1,6 +1,6 @@
-from ..architect.plugins.input.enum import ValueType
-from ..architect.plugins.input.utils.inputAction import InputAction
-from ..architect.plugins.input.utils.modifier import DeadZone
+from ..engine.architect.plugins.input.enum import ValueType
+from ..engine.architect.plugins.input.utils.inputAction import InputAction
+from ..engine.architect.plugins.input.utils.modifier import DeadZone
 
 
 InputAction(

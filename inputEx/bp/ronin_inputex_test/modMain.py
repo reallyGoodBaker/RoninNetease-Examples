@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from mod.common.mod import Mod
-from .architect.startup import createServer, createClient, conf
+from .engine.architect.startup import createServer, createClient, conf
 
 
 @Mod.Binding(name = conf('MOD_NAME'), version = conf('MOD_VERSION'))
