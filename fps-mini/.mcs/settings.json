@@ -1,0 +1,10 @@
+{
+    "Arena.Component.Namespace": "roninexample",
+    "FirstTabSetting": 0,
+    "ShortItemSettings": [
+        "rp\\models",
+        "rp\\textures"
+    ],
+    "Uluru.autoLayerDict": {},
+    "Uluru.checkSuspectOldUI": true
+}

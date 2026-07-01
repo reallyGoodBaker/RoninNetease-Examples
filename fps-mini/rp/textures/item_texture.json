@@ -1,0 +1,12 @@
+{
+    "resource_pack_name": "vanilla",
+    "texture_data": {
+        "roninexample:bolt": {
+            "textures": "textures/item/weapons/bolt"
+        },
+        "roninexample:pistol": {
+            "textures": "textures/item/weapons/pistol"
+        }
+    },
+    "texture_name": "atlas.items"
+}

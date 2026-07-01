@@ -1,2 +1,4 @@
 .mcdev.json
 studio.json
+.vscode
+world_*_packs.json

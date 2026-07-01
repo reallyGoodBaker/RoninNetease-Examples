@@ -1,0 +1,40 @@
+{
+    "Addon": {
+        "EnchantSetting": {
+            "amplifier": 1
+        },
+        "PackResourceSortData": {
+            "1_ronin:none_entity": {
+                "createTime": 1782887182.3859386,
+                "modifyTime": 1782887182.3859386
+            },
+            "2_roninexample:bolt": {
+                "createTime": 1782900109.1390877,
+                "modifyTime": 1782905731.831733
+            },
+            "2_roninexample:pistol": {
+                "createTime": 1782887223.437402,
+                "modifyTime": 1782905718.4541712
+            },
+            "8192_roninexample_category_config": {
+                "createTime": 1782887264.7413619,
+                "modifyTime": 1782887287.5267577
+            }
+        },
+        "PlayerEffectSetting": {
+            "amplifier": 1,
+            "duration": 10
+        },
+        "PresetInstanceTreeData": []
+    },
+    "UI": {
+        "expandData": {
+            "prefab": {},
+            "screen": {
+                "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\ammo.json": [
+                    "/main"
+                ]
+            }
+        }
+    }
+}

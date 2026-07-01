@@ -1,0 +1,9 @@
+{
+    "category": [
+        {
+            "icon": "textures/item/weapons/auto",
+            "labelText": "示例武器",
+            "name": "weapons"
+        }
+    ]
+}

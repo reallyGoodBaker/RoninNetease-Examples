@@ -1,0 +1,32 @@
+{
+    "format_version": "1.12.0",
+    "render_controllers": {
+        "controller.render.template.weapon": {
+            "geometry": "geometry.weapon",
+            "textures": [
+                "texture.weapon"
+            ],
+            "materials": [
+                {
+                    "*": "material.weapon"
+                }
+            ]
+        },
+        "controller.render.template.arm": {
+            "geometry": "geometry.default",
+            "textures": [
+                "texture.default"
+            ],
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "part_visibility": [
+                { "*": false },
+                { "*Arm": true },
+                { "*Sleeve": true }
+            ]
+        }
+    }
+}
