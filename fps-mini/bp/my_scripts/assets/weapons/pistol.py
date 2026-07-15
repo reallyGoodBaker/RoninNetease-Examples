@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ...engine.architect.utils.persona.client import RenderResources
 
 

@@ -8,10 +8,11 @@
 					"rotation": [0, "-q.mod.is_first_person ? -180 : -0", 0]
 				},
 				"body": {
+					"rotation": ["q.mod.x_rot", "q.mod.y_rot", 0],
 					"position": [
-						"-math.cos(q.modified_distance_moved * 20) * math.clamp(q.modified_move_speed, 0, 1) * 0.2",
-						"math.sin(q.modified_distance_moved * 40) * math.clamp(q.modified_move_speed, 0, 1) * 0.15",
-						"math.cos(q.modified_distance_moved * 20) * math.clamp(q.modified_move_speed, 0, 1) * 0.1"
+						"v.fpbody_px = math.lerp(v.fpbody_px ?? 0, -math.cos(q.modified_distance_moved * (q.is_sprinting ? 25 : 20)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.4 : 0.2), 0.1); return v.fpbody_px;",
+						"v.fpbody_py = math.lerp(v.fpbody_py ?? 0, math.sin(q.modified_distance_moved * (q.is_sprinting ? 50 : 40)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.5 : 0.15), 0.1); return v.fpbody_py;",
+						"v.fpbody_pz = math.lerp(v.fpbody_pz ?? 0, math.cos(q.modified_distance_moved * (q.is_sprinting ? 25 : 20)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.3 : 0.1), 0.1); return v.fpbody_pz;"
 					]
 				}
 			}
@@ -128,7 +129,7 @@
 			"bones": {
 				"rightArm": {
 					"rotation": [-90, 0, 0],
-					"position": [6, 1.3, 1]
+					"position": [5.75, 1.5, 1]
 				}
 			}
 		},
@@ -154,13 +155,13 @@
 				"rightArm": {
 					"rotation": {
 						"0.0": [-90, 0, 0],
-						"0.0417": [-90, 0, 0],
+						"0.0417": [-89, 0, 0],
 						"0.125": [-90, 0, 0]
 					},
 					"position": {
-						"0.0": [6, 1.3, 1],
-						"0.0417": [6, 1.1, 3],
-						"0.125": [6, 1.3, 1]
+						"0.0": [5.75, 1.5, 1],
+						"0.0417": [5.75, 1.45, 2.5],
+						"0.125": [5.75, 1.5, 1]
 					}
 				},
 				"slide": {
@@ -215,9 +216,9 @@
 						"0.125": [-90, 0, 0]
 					},
 					"position": {
-						"0.0": [6, 1.3, 1],
-						"0.0417": [6, 1.1, 3],
-						"0.125": [6, 1.3, 1]
+						"0.0": [5.75, 1.5, 1],
+						"0.0417": [5.75, 1.25, 2],
+						"0.125": [5.75, 1.5, 1]
 					}
 				},
 				"slide": {
@@ -902,7 +903,7 @@
 			"bones": {
 				"rightArm": {
 					"rotation": [-90, 0, 0],
-					"position": [6, 1.3, 1]
+					"position": [5.75, 1.5, 1]
 				},
 				"slide": {
 					"position": [0, 1.5, 0]
@@ -927,6 +928,31 @@
 			"bones": {
 				"body": {
 					"position": [0, 0, 0]
+				}
+			}
+		},
+		"animation.template.weapons.pistol.fp.run": {
+			"loop": "hold_on_last_frame",
+			"anim_time_update": "v.anim_timeex.template.weapons.pistol.fp.run",
+			"blend_weight": "v.blendex.template.weapons.pistol.fp.run",
+			"bones": {
+				"rightArm": {
+					"rotation": [-148.4334, 17.2295, 10.3142],
+					"position": [-1, -3.3, -6]
+				}
+			}
+		},
+		"animation.template.weapons.pistol.fp.run_slide_stop": {
+			"loop": "hold_on_last_frame",
+			"anim_time_update": "v.anim_timeex.template.weapons.pistol.fp.run_slide_stop",
+			"blend_weight": "v.blendex.template.weapons.pistol.fp.run_slide_stop",
+			"bones": {
+				"rightArm": {
+					"rotation": [-148.4334, 17.2295, 10.3142],
+					"position": [-1, -3.3, -6]
+				},
+				"slide": {
+					"position": [0, 1.5, 0]
 				}
 			}
 		}

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ...engine.architect.plugins.animation.utils import BaseActionDispatcher, Dispatch
 from ...engine.architect.compact import SubsystemManager
 

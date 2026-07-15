@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from ..engine.architect.utils.persona.client import PersonaRendererComponent, HandItemVisibility
 from ..engine.architect.compact import (
     localPlayerId, LevelClient,

@@ -28,6 +28,7 @@
         "PresetInstanceTreeData": []
     },
     "UI": {
+        "customPrefabGroupExpand": [],
         "expandData": {
             "prefab": {},
             "screen": {

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 AnimMeta = {
     "animation.template.weapons.pistol.fp.rot": {
         "loop": "hold_on_last_frame",
@@ -67,6 +68,18 @@ AnimMeta = {
         "length": -1
     },
     "animation.template.weapons.pistol.fp.hold_slide_stop": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.weapons.pistol.fp.walk": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.weapons.pistol.fp.run": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.weapons.pistol.fp.run_slide_stop": {
         "loop": "hold_on_last_frame",
         "length": -1
     }
