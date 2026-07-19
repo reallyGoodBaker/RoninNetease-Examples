@@ -6,14 +6,14 @@
 # ============================================
 
 Asset = {
-    'itemType': 'roninexample:mm9',
+    'itemType': 'roninexample:ammo762',
 
     # 弹道
     'projectile': {
-        'baseSpeed': 200,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
+        'baseSpeed': 400,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
         'gravity': -2,                  # 重力值（为了娱乐性不采用真实的重力）
-        'drag': 0.02,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
-        'caliber': '9mm',               # 口径标识 (string), 作为 customTag 传入 hurt 组件
+        'drag': 0.005,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
+        'caliber': '762',             # 口径标识 (string), 作为 customTag 传入 hurt 组件
         'bounce': False,                # 子弹可弹跳（比如榴弹）
         'ignoreEntities': 'penetrate.entities',     # 子弹不处理的实体
     },
@@ -28,9 +28,9 @@ Asset = {
     # 子弹穿透设置
     'penetrate': {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
-        'damageRetentionPerPass': 0.5,              # 每次穿透后伤害保留比例
-        'velocityRetentionPerPass': 0.5,            # 每次穿透后速度保留比例
-        'minPenetrateSpeed': 190,                   # 最小穿透速度
+        'damageRetentionPerPass': 0.7,              # 每次穿透后伤害保留比例
+        'velocityRetentionPerPass': 0.7,            # 每次穿透后速度保留比例
+        'minPenetrateSpeed': 380,                   # 最小穿透速度
     },
 
     # --- 弹头载荷数组 (命中后按顺序激活的效果) ---
@@ -39,9 +39,9 @@ Asset = {
         # 载荷1: 动能伤害 (几乎必选)
         {
             'type': 'kinetic',                      # 载荷类型
-            'baseDamage': 15,                       # 基础伤害值
+            'baseDamage': 26,                       # 基础伤害值
             'headshotMultiplier': 2.0,              # 爆头伤害倍率
-            'damageCurve': 'curves.template'        # 伤害随速度衰减曲线资源ID (asset uri)
+            'damageCurve': 'curves.far'             # 伤害随速度衰减曲线资源ID (asset uri)
         },
         # 载荷2: 爆炸 (可选)
         # {

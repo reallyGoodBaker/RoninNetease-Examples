@@ -10,12 +10,14 @@ from ..engine.architect.compact import (
     QueryVariable,
     Sched,
     compClient, vec,
+    addTimer,
 )
 from ..engine.architect.math.double import lerp, clamp
-from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent, AnimationEasingConf, AnimationBlendingTypes
+from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent, AnimationEasingConf
 from ..assets.animMeta import AnimMeta
 
 from ..lib.bullet import ClientBulletSystem
+from ..lib.shootVfx import PlayerShooterVfxSystem
 
 
 ammoCount, setAmmo = signal(15)
@@ -47,7 +49,7 @@ class PlayerAnimationSubsystem(ClientSubsystem):
     def updateCamRot(self):
         cam = self.level.camera
         x, y, _ = cam.GetCameraRotation()
-        self.dx = clamp((x - self.lastXRot) * 0.3, -4, 4)
+        self.dx = clamp((self.lastXRot - x) * 0.3, -4, 4)
         _dy = y - self.lastYRot
         if _dy > 180:
             _dy -= 360
@@ -65,6 +67,9 @@ class PlayerAnimationSubsystem(ClientSubsystem):
         yRot.setValue(localPlayerId(), _dy)
         self.lastDx = _dx
         self.lastDy = _dy
+
+    def onReady(self):
+        self.shooter = PlayerShooterVfxSystem.getInstance()
 
     def onInit(self):
         self.canTick = True
@@ -99,9 +104,8 @@ class PlayerAnimationSubsystem(ClientSubsystem):
         self.animEx.registerAnimations(mapping)
         self.animEx.updateActorAnimDef()
         inConf = AnimationEasingConf(1, 0.1)
-        outConf = AnimationEasingConf(0, 0.1)
         for key in mapping.keys():
-            self.animEx.registerEasing(key, inConf, outConf)
+            self.animEx.registerEasing(key, inConf)
         self.animEx.play('fp.hold' if ammoCount() > 1 else 'fp.hold_slide_stop', replay=True, clientOnly=True)
 
     @EventListener()
@@ -114,6 +118,7 @@ class PlayerAnimationSubsystem(ClientSubsystem):
             vec(self.level.camera.GetForward()),
             vec(compClient.CreatePos(localPlayerId()).GetPos())
         )
+        self.shooter.shootCamVfx()
         if not self.aiming:
             self.animEx.play('fp.shoot' if ammo > 1 else 'fp.last_shoot', replay=True, clientOnly=True, noBlending=True)
             setAmmo(ammo - 1)
@@ -127,16 +132,12 @@ class PlayerAnimationSubsystem(ClientSubsystem):
             return
         self.aiming = True
         self.animEx.play('fp.aim' if ammoCount() > 1 else 'fp.aim_slide_stop', replay=True, clientOnly=True)
-        self.level.playerView.SetPlayerFovScale(0.8)
-        self.level.postProcess.SetEnableDepthOfField(True)
-        self.level.postProcess.SetDepthOfFieldFarBlurScale(0)
-        self.level.postProcess.SetDepthOfFieldNearBlurScale(15)
+        self.shooter.startAiming(0.8)
 
     def stopAiming(self):
         self.animEx.play('fp.hold' if ammoCount() > 1 else 'fp.hold_slide_stop', replay=True, clientOnly=True)
-        self.level.playerView.SetPlayerFovScale(1)
-        self.level.postProcess.SetEnableDepthOfField(False)
         self.aiming = False
+        self.shooter.stopAiming()
 
     @EventListener()
     def onRightRelease(self, _=events.RightClickReleaseClientEvent()):

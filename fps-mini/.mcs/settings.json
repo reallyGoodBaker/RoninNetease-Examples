@@ -2,6 +2,7 @@
     "Arena.Component.Namespace": "roninexample",
     "FirstTabSetting": 0,
     "ShortItemSettings": [
+        "rp\\ui",
         "rp\\models",
         "rp\\textures"
     ],

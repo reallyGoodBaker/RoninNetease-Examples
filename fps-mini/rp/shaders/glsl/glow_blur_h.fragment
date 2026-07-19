@@ -1,0 +1,21 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+
+#include "fragmentVersionCentroidUV.h"
+#include "util.h"
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+
+void main()
+{
+    vec2 tex_offset = 1.0 / textureSize(TEXTURE_0, 0);
+    float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+
+    vec4 color = texture2D(TEXTURE_0, uv) * weight[0];
+    for(int i = 1; i < 5; ++i) {
+        color += texture2D(TEXTURE_0, uv + vec2(tex_offset.x * i * 3.5, 0.0)) * weight[i];
+        color += texture2D(TEXTURE_0, uv - vec2(tex_offset.x * i * 3.5, 0.0)) * weight[i];
+    }
+
+    gl_FragColor = color;
+}

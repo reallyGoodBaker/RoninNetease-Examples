@@ -16,8 +16,9 @@ MOD_SERVER_MODULES = [
 MOD_CLIENT_MODULES = [
     'assets.notifies.reload',
 
-    'systems.playerPersona',
-    'systems.playerAnim',
+    # 'systems.playerPersona',
+    # 'systems.playerAnim',
+    'systems.playerInit'
 ]
 
 PLUGINS = [
