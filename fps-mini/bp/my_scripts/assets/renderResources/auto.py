@@ -4,7 +4,7 @@ from ...engine.architect.utils.persona.client import RenderResources
 
 Asset = {
     RenderResources.Geometries: {
-        'weapon': 'geometry.weapons.pistol',
+        'weapon': 'geometry.weapons.auto',
     },
     RenderResources.Materials: {
         'weapon': 'netease_entity_alphatest_metallic',
@@ -12,7 +12,7 @@ Asset = {
         'scope': 'scope',
     },
     RenderResources.Textures: {
-        'weapon': 'textures/entity/weapons/pistol',
+        'weapon': 'textures/entity/weapons/auto',
     },
     RenderResources.Animations: {
         'root_rot': 'animation.template.weapons.fp.rot'

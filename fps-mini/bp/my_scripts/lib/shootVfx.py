@@ -81,12 +81,13 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.handleWeaponFollow(dt)
         self.handleCamZRot(t)
         self.handleCamVignette(dt * 4)
-        # 枪口火焰延迟关闭（timer 到 0 时关闭）
+        self.handleMuzzleFlashDisappear(dt)
+
+    def handleMuzzleFlashDisappear(self, dt):
         if self._muzzleFlashActive:
             self._muzzleFlashTimer -= dt
             if self._muzzleFlashTimer <= 0:
                 self._muzzleFlashActive = False
-                self.postProcess.SetParameter('muzzle_flash', 'lightIntensity', 0.0)
                 self.postProcess.SetEnableByName('muzzle_flash', False)
 
     def handleWeaponFollow(self, dt):
@@ -123,17 +124,13 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.isAiming = True
         self.fovScale = fovScale
         self.vSmooth = vSmooth
-        self.postProcess.SetEnableDepthOfField(True)
-        self.postProcess.SetDepthOfFieldFocusDistance(3)
-        self.postProcess.SetDepthOfFieldFarBlurScale(0)
-        self.postProcess.SetDepthOfFieldNearBlurScale(15)
-        self.postProcess.SetDepthOfFieldBlurRadius(0.4)
+        self.postProcess.SetEnableByName('scope', True)
 
     def stopAiming(self):
         self.isAiming = False
         self.fovScale = 1.0
         self.vSmooth = 0.0
-        self.postProcess.SetEnableDepthOfField(False)
+        self.postProcess.SetEnableByName('scope', False)
 
     _muzzleFlashTimer = 0.0
     _muzzleFlashActive = False
@@ -149,17 +146,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
 
         # 枪口火焰：3D 空间点光源（先关再开确保参数更新）
         self.postProcess.SetEnableByName('muzzle_flash', False)
-        pos = self.cam.GetPosition()
-        fwd = self.cam.GetForward()
-        muzzleX = pos[0] + fwd[0] * 2.0
-        muzzleY = pos[1] + fwd[1] * 2.0
-        muzzleZ = pos[2] + fwd[2] * 2.0
-        self.postProcess.SetParameter('muzzle_flash', 'lightX', muzzleX)
-        self.postProcess.SetParameter('muzzle_flash', 'lightY', muzzleY)
-        self.postProcess.SetParameter('muzzle_flash', 'lightZ', muzzleZ)
-        self.postProcess.SetParameter('muzzle_flash', 'lightIntensity', 1.0)
         self.postProcess.SetEnableByName('muzzle_flash', True)
-        self._muzzleFlashTimer = 0.15
+        self._muzzleFlashTimer = 0.05
         self._muzzleFlashActive = True
 
     @EventListener()

@@ -1,6 +1,9 @@
 {
     "resource_pack_name": "vanilla",
     "texture_data": {
+        "roninexample:auto": {
+            "textures": "textures/item/weapons/auto"
+        },
         "roninexample:bolt": {
             "textures": "textures/item/weapons/bolt"
         },

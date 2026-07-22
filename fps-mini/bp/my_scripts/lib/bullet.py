@@ -146,10 +146,11 @@ class BulletBase(object):
         entityId = result['entityId']
         min, max = entityAabbDef(entityId)
         halfHeadHeight = (max[1] - min[1]) / 2
+        radius = math.sqrt((max[0] - min[0]) ** 2 + (max[1] - min[1]) ** 2 + (max[2] - min[2]) ** 2) / 2
         x, y, z = compClient.CreateModel(entityId).GetBonePositionFromMinecraftObject('head') or (0, 0, 0)
         hitPos = result['hitPos']
         headCenterToRay = pointToLineDist(vec((x, y + halfHeadHeight, z)), vec(hitPos), vDir)
-        isHeadShot = headCenterToRay <= halfHeadHeight
+        isHeadShot = headCenterToRay <= radius
 
         if self.speed >= self.penetrate['minPenetrateSpeed']:
             self.handlePenetrateEntity(entityId, isHeadShot, hitPos, clientBullet)

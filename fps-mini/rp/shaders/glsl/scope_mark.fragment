@@ -3,13 +3,18 @@
 
 #include "fragmentVersionCentroidUV.h"
 #include "util.h"
+#include "markConstants.h"
 
 LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
 
 void main()
 {
     vec4 color = texture2D(TEXTURE_0, uv);
-    color.a = 0.0001;
+    if (color.a <= 0) {
+        gl_FragColor = color;
+        return;
+    }
 
-    gl_FragColor = color;
+    float markVal = MARK * float(FPS_SCOPE_MARK);
+    gl_FragColor = vec4(markVal, markVal, markVal, markVal);
 }

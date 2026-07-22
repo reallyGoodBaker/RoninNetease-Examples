@@ -12,7 +12,7 @@ LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
 LAYOUT_BINDING(1) uniform sampler2D TEXTURE_1;
 LAYOUT_BINDING(2) uniform sampler2D TEXTURE_2;
 
-uniform vec3 WORLD_PARAMETERS;
+uniform vec2 TIME_PARAMETERS;
 
 highp vec3 getWorldPos(vec2 uv, float z) {
     highp vec4 pos = vec4(uv, z, 1.0) * 2.0 - 1.0;
@@ -70,12 +70,11 @@ void main() {
     float inner = MAX_DISTANCE * 0.8;
     float attenuation = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
     float factor = 1.0 - smoothstep(inner, MAX_DISTANCE, dist);
-    float lightLevel = clamp(WORLD_PARAMETERS.z, 0.2, 1.0);
-    float baseMul = (1 - lightLevel) * attenuation * factor;
+    float baseMul = 2.0 * attenuation * factor;
 
-    color.r *= 1 + baseMul;
-    color.g *= 1 + baseMul * 0.9;
-    color.b *= 1 + baseMul * 0.8;
+    color.r *= 1.0 + baseMul;
+    color.g *= 1.0 + baseMul * 0.7;
+    color.b *= 1.0 + baseMul * 0.4;
 
     gl_FragColor = color;
 }

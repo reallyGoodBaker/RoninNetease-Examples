@@ -7,11 +7,10 @@
         "coloradjustment",
         "vignette",
         "lensstain",
-        "scope2x",
         "oldtv",
         "scanmap",
-        "glow",
-        "muzzle_flash"
+        "muzzle_flash",
+        "scope"
     ],
     "process_array": [
         {
@@ -238,16 +237,6 @@
             ]
         },
         {
-            "name": "scope2x",
-            "enable": false,
-            "pass_array": [
-                {
-                    "render_target": {"width": 1.0, "height": 1.0},
-                    "material": "scope2x"
-                }
-            ]
-        },
-        {
             "name": "oldtv",
             "enable": false,
             "paras": [
@@ -282,33 +271,6 @@
             ]
         },
         {
-            "name": "glow",
-            "enable": true,
-            "paras": [
-                {"name": "threshold", "value": 0.7, "range": [0.0, 1.0]},
-                {"name": "intensity", "value": 1.5, "range": [0.0, 5.0]},
-                {"name": "radius", "value": 0.008, "range": [0.001, 0.05]}
-            ],
-            "pass_array": [
-                {
-                    "render_target": {"width": 1.0, "height": 1.0},
-                    "material": "weapon_bloom_extract"
-                },
-                {
-                    "render_target": {"width": 1.0, "height": 1.0},
-                    "material": "weapon_bloom_horizontal"
-                },
-                {
-                    "render_target": {"width": 1.0, "height": 1.0},
-                    "material": "weapon_bloom_vertical"
-                },
-                {
-                    "render_target": {"width": 1.0, "height": 1.0},
-                    "material": "weapon_bloom_combine"
-                }
-            ]
-        },
-        {
             "name": "muzzle_flash",
             "enable": false,
             "pass_array": [
@@ -316,6 +278,20 @@
                     "render_target": {"width": 1.0, "height": 1.0},
                     "material": "muzzle_flash",
                     "depth_enable": true
+                }
+            ]
+        },
+        {
+            "name": "scope",
+            "enable": false,
+            "paras": [
+                {"name": "scale", "value": 1.5, "range": [0.0, 16.0]},
+                {"name": "radius", "value": 0.3, "range": [0.0, 1.0]}
+            ],
+            "pass_array": [
+                {
+                    "render_target": {"width": 1.0, "height": 1.0},
+                    "material": "scope"
                 }
             ]
         }

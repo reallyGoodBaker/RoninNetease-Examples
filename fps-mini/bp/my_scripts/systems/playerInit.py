@@ -12,6 +12,7 @@ from ..assets.animMeta import AnimMeta
 WeaponMapping = {
     'roninexample:pistol': 'pistol',
     'roninexample:bolt': 'bolt',
+    'roninexample:auto': 'auto',
 
 }
 

@@ -10,7 +10,7 @@
                 {
                     "*": "material.weapon",
                     "glow*": "material.glow",
-                    "scope2x*": "material.scope2x"
+                    "scope_inner": "material.scope"
                 }
             ]
         },

@@ -1,0 +1,84 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+
+#include "fragmentVersionCentroidUV.h"
+#include "util.h"
+#include "markConstants.h"
+
+uniform vec4 EXTRA_VECTOR1;
+uniform vec4 EXTRA_VECTOR4;
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+
+bool isInsetScope() {
+    // Use original texel-precise step sizes to guarantee we hit 1px crosshair lines.
+    float stepH = EXTRA_VECTOR4.z;
+    float stepV = EXTRA_VECTOR4.w;
+
+    // Limit search distance so we don't scan the entire texture.
+    // Scope crosshair is near the center; 0.3 from current pixel is enough to reach it.
+    float maxDist = 0.3;
+    float halfStepH = stepH * 0.5;
+    float halfStepV = stepV * 0.5;
+
+    // Search upward from current pixel
+    int above = 0;
+    for (float v = uv.y + halfStepV; v < 1.0 && v < uv.y + maxDist; v += stepV) {
+        vec4 color = texture2D(TEXTURE_0, vec2(uv.x, v));
+        if (isMark(color, FPS_SCOPE_MARK)) {
+            above += 1;
+            break;
+        }
+    }
+
+    // Search downward
+    int below = 0;
+    for (float v = uv.y - halfStepV; v > 0.0 && v > uv.y - maxDist; v -= stepV) {
+        vec4 color = texture2D(TEXTURE_0, vec2(uv.x, v));
+        if (isMark(color, FPS_SCOPE_MARK)) {
+            below += 1;
+            break;
+        }
+    }
+
+    if (above != 1 || below != 1) return false;
+
+    // Search rightward
+    int right = 0;
+    for (float u = uv.x + halfStepH; u < 1.0 && u < uv.x + maxDist; u += stepH) {
+        vec4 color = texture2D(TEXTURE_0, vec2(u, uv.y));
+        if (isMark(color, FPS_SCOPE_MARK)) {
+            right += 1;
+            break;
+        }
+    }
+
+    // Search leftward
+    int left = 0;
+    for (float u = uv.x - halfStepH; u > 0.0 && u > uv.x - maxDist; u -= stepH) {
+        vec4 color = texture2D(TEXTURE_0, vec2(u, uv.y));
+        if (isMark(color, FPS_SCOPE_MARK)) {
+            left += 1;
+            break;
+        }
+    }
+
+    return left == 1 && right == 1;
+}
+
+void main()
+{
+    vec4 color = texture2D(TEXTURE_0, uv);
+    if (!isInsetScope()) {
+        gl_FragColor = color;
+        return;
+    }
+
+    vec2 uvZoomed = (uv - 0.5) / 2.0 + 0.5;
+    uvZoomed = clamp(uvZoomed, 0.0, 1.0);
+
+    vec4 texColor = texture2D(TEXTURE_0, uvZoomed);
+    vec2 viewDir = (uv - 0.5) * 2.0;
+    float factor = 1 - smoothstep(0.0, 0.3, length(viewDir));
+    gl_FragColor = texColor * factor * factor * 1.2;
+}

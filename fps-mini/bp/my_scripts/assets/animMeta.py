@@ -50,7 +50,7 @@ AnimMeta = {
     },
     "animation.weapons.bolt.fp.reload_single": {
         "loop": "hold_on_last_frame",
-        "length": 0.3958
+        "length": 0.5
     },
     "animation.template.weapons.fp.rot": {
         "loop": "hold_on_last_frame",
