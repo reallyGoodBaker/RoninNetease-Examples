@@ -1,0 +1,20 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+
+#include "fragmentVersionCentroidUV.h"
+#include "util.h"
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+
+void main()
+{
+    // 2x zoom: sample center-cropped region and map to fullscreen
+    // UV 0.0 -> 0.25, UV 0.5 -> 0.5, UV 1.0 -> 0.75
+    vec2 uv_zoomed = (uv - 0.5) / 2.0 + 0.5;
+    uv_zoomed = clamp(uv_zoomed, 0.0, 1.0);
+
+    vec4 texColor = texture2D(TEXTURE_0, uv_zoomed);
+
+    // Multiply by vertex color (1.0 default when no vertex color bound)
+    gl_FragColor = texColor;
+}

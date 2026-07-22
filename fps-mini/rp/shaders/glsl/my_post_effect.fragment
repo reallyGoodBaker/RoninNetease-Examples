@@ -1,0 +1,58 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+precision highp float;
+
+#include "fragmentVersionCentroidUV.h"
+#include "uniformPerFrameConstants.h"
+#include "uniformWorldConstants.h"
+#include "uniformRenderChunkConstants.h"
+#line 9
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+LAYOUT_BINDING(1) uniform sampler2D TEXTURE_1;
+LAYOUT_BINDING(2) uniform sampler2D TEXTURE_2;
+
+uniform vec4 EXTRA_VECTOR1;  // (lightX, lightY, lightZ, lightIntensity)
+
+highp vec3 getWorldPos(vec2 uv, float z) {
+    highp vec4 pos = vec4(uv, z, 1.0) * 2.0 - 1.0;
+    highp vec4 worldPos = inverse(PROJ*WORLDVIEW) * pos;
+    return worldPos.xyz / worldPos.w;
+}
+
+const float MAX_DISTANCE = 6.0;
+
+void main() {
+    vec4 color = texture2D(TEXTURE_0, uv);
+    float depth = texture2D(TEXTURE_2, uv).r;
+
+    if (depth > 0.999) {
+        gl_FragColor = color;
+        return;
+    }
+
+    highp vec3 pixelPos = getWorldPos(uv, depth);
+    vec3 lightPos = EXTRA_VECTOR1.xyz;
+    float intensity = EXTRA_VECTOR1.a;
+
+    if (intensity < 0.01) {
+        gl_FragColor = color;
+        return;
+    }
+
+    float dist = distance(pixelPos, lightPos);
+    if (dist > MAX_DISTANCE) {
+        gl_FragColor = color;
+        return;
+    }
+
+    // 物理距离平方反比衰减
+    float attenuation = 1.0 / (1.0 + 0.09 * dist * dist);
+    float edgeFade = 1.0 - smoothstep(MAX_DISTANCE * 0.5, MAX_DISTANCE, dist);
+    float light = attenuation * edgeFade * intensity;
+
+    // 乘法照亮
+    color.rgb *= (1.0 + light);
+
+    gl_FragColor = color;
+}

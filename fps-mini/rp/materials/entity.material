@@ -3,6 +3,13 @@
         "version": "1.0.0",
         "glowmat:entity_alphatest": {
             "fragmentShader": "shaders/glsl/glowmat.fragment"
+        },
+        "scope2x:entity_alphablend": {
+            "fragmentShader": "shaders/glsl/scope2x.fragment",
+            "+states": [
+                "DisableRGBWrite",
+                "DisableDepthWrite"
+            ]
         }
     }
 }

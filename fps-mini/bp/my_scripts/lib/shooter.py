@@ -412,6 +412,17 @@ class AimingState(StateNode):
         # type: (ShooterSystem) -> None
         return tree.aiming and tree.weapon.canOperate()
     
+    def canExit(self, tree):
+        # type: (ShooterSystem) -> None
+        # 手动枪机动画在 default layer，拉栓时禁止退出以防动画被覆盖
+        if tree.weapon.bolt['cycleMode'] == 'manual':
+            # 跑步可以强制打断
+            if tree.player.isSprinting():
+                return True
+            return tree.weapon.curState != GunState.Cycling
+        # 自动枪机动画在独立 layer，不涉及冲突
+        return True
+    
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
         print 'Aiming'
@@ -427,6 +438,13 @@ class AimingState(StateNode):
         # type: (StateNode, ShooterSystem) -> None
         tree.shooterVfx.stopAiming()
         tree.weapon.aiming = False
+    
+    def update(self, tree):
+        # type: (ShooterSystem) -> None
+        # 手动枪机拉栓完成后再退出瞄准
+        if tree.weapon.bolt['cycleMode'] == 'manual':
+            if not tree.aiming and tree.weapon.curState == GunState.Hold:
+                tree.finishTasks()
 
 
 class SprintingState(StateNode):
@@ -468,7 +486,9 @@ class IdleState(StateNode):
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
         print 'Idle'
-        tree.weapon.curState = GunState.Hold
+        # 拉栓中保持 curState=Cycling，不打断 cycleBolt 协程
+        if tree.weapon.curState != GunState.Cycling:
+            tree.weapon.curState = GunState.Hold
         tree.animEx.play(tree.movementFeature['walkAnim'])
 
 
@@ -578,15 +598,22 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
 
     def startAiming(self):
+        if self.weapon and self.weapon.curState == GunState.Cycling:
+            return
         self.aiming = True
-        self.weapon.aiming = True
+        if self.weapon:
+            self.weapon.aiming = True
         self.finishTasks()
 
 
     def stopAiming(self):
         self.aiming = False
-        self.weapon.aiming = False
-        self.weapon.curState = GunState.Hold
+        if self.weapon:
+            self.weapon.aiming = False
+            # 拉栓中保留 curState=Cycling，由 AimingState 保护退出
+            # 非拉栓时正常重置 Hold
+            if self.weapon.curState != GunState.Cycling:
+                self.weapon.curState = GunState.Hold
         self.finishTasks()
 
 

@@ -9,7 +9,8 @@
             "materials": [
                 {
                     "*": "material.weapon",
-                    "glow*": "material.glow"
+                    "glow*": "material.glow",
+                    "scope2x*": "material.scope2x"
                 }
             ]
         },

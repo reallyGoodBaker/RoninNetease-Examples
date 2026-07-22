@@ -3,8 +3,12 @@
         "vertexShader": "shaders/uv_fullscreen.vertex",
         "fragmentShader": "shaders/glow_extract.fragment",
         "vertexFields": [
-            { "field": "Position" },
-            { "field": "UV0" }
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
         ],
         "samplerStates": [
             {
@@ -22,8 +26,12 @@
         "vertexShader": "shaders/uv_fullscreen.vertex",
         "fragmentShader": "shaders/glow_blur_h.fragment",
         "vertexFields": [
-            { "field": "Position" },
-            { "field": "UV0" }
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
         ],
         "samplerStates": [
             {
@@ -41,8 +49,12 @@
         "vertexShader": "shaders/uv_fullscreen.vertex",
         "fragmentShader": "shaders/glow_blur_v.fragment",
         "vertexFields": [
-            { "field": "Position" },
-            { "field": "UV0" }
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
         ],
         "samplerStates": [
             {
@@ -60,14 +72,74 @@
         "vertexShader": "shaders/uv_fullscreen.vertex",
         "fragmentShader": "shaders/glow_combine.fragment",
         "vertexFields": [
-            { "field": "Position" },
-            { "field": "UV0" }
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
         ],
         "samplerStates": [
             {
                 "samplerIndex": 0,
                 "textureWrap": "Clamp",
                 "textureFilter": "Bilinear"
+            }
+        ],
+        "states": [
+            "DisableDepthTest"
+        ],
+        "msaaSupport": "Both"
+    },
+    "scope2x": {
+        "vertexShader": "shaders/uv_fullscreen.vertex",
+        "fragmentShader": "shaders/glsl/scope2x.fragment",
+        "vertexFields": [
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
+        ],
+        "samplerStates": [
+            {
+                "samplerIndex": 0,
+                "textureWrap": "Clamp",
+                "textureFilter": "Bilinear"
+            }
+        ],
+        "states": [
+            "DisableDepthTest"
+        ],
+        "msaaSupport": "Both"
+    },
+    "muzzle_flash": {
+        "vertexShader": "shaders/uv_fullscreen.vertex",
+        "fragmentShader": "shaders/glsl/muzzle_flash.fragment",
+        "vertexFields": [
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
+        ],
+        "samplerStates": [
+            {
+                "samplerIndex": 0,
+                "textureWrap": "Clamp",
+                "textureFilter": "Bilinear"
+            },
+            {
+                "samplerIndex": 1,
+                "textureWrap": "Clamp",
+                "textureFilter": "Point"
+            },
+            {
+                "samplerIndex": 2,
+                "textureWrap": "Clamp",
+                "textureFilter": "Point"
             }
         ],
         "states": [

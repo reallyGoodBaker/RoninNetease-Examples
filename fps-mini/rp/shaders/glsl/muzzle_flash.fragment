@@ -1,0 +1,81 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+precision highp float;
+
+#include "fragmentVersionCentroidUV.h"
+#include "uniformPerFrameConstants.h"
+#include "uniformWorldConstants.h"
+#include "uniformRenderChunkConstants.h"
+#line 9
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+LAYOUT_BINDING(1) uniform sampler2D TEXTURE_1;
+LAYOUT_BINDING(2) uniform sampler2D TEXTURE_2;
+
+uniform vec3 WORLD_PARAMETERS;
+
+highp vec3 getWorldPos(vec2 uv, float z) {
+    highp vec4 pos = vec4(uv, z, 1.0) * 2.0 - 1.0;
+    highp vec4 worldPos = inverse(PROJ*WORLDVIEW) * pos;
+    return worldPos.xyz / worldPos.w;
+}
+
+const float MAX_DISTANCE = 16.0;
+
+highp vec3 colorTemperatureToLinearRGB(float progress) {
+    // 限制在有效范围内
+    float temp = clamp(progress * 3500.0 + 3800.0, 3800.0, 7300.0);
+    float t = temp / 100.0; // 将开尔文除以 100 用于算法计算
+    
+    vec3 color;
+    
+    // === Tanner Helland 核心算法 (数值已调整为浮点精度) ===
+    if (t <= 66.0) {
+        // 低温区 (3800K ~ 6600K) : 偏暖色
+        color.r = 255.0;
+        color.g = 99.4708025861 * log(t) - 161.1195681661;
+        
+        // 防止对数在极低温度下无效 (3800K 远大于 10，安全)
+        color.b = 138.5177312231 * log(t - 10.0) - 305.0447927307;
+    } else {
+        // 高温区 (6600K ~ 7300K) : 偏冷色
+        color.r = 329.698727446 * pow(t - 60.0, -0.1332047592);
+        color.g = 288.1221695283 * pow(t - 60.0, -0.0755148492);
+        color.b = 255.0;
+    }
+    
+    // === 关键步骤：归一化至 6500K (D65 标准) ===
+    // 在 t=65 (即 6500K) 时，上述算法算出约为 (255, 254.14, 250.08)
+    // 为了让 6500K 恰好等于 (1,1,1)，进行逐通道除法校准
+    color.r = color.r / 255.0;
+    color.g = color.g / 254.14; 
+    color.b = color.b / 250.08;
+    
+    // 钳制溢出（高色温下蓝色可能略微超过 1.0）
+    return clamp(color, 0.0, 1.0);
+}
+
+void main() {
+    vec4 color = texture2D(TEXTURE_0, uv);
+    float depth = texture2D(TEXTURE_2, uv).r;
+
+    highp vec3 worldPos = getWorldPos(uv, depth);
+    float dist = length(worldPos);
+
+    if (dist > MAX_DISTANCE || dist < 0.5) {
+        gl_FragColor = color;
+        return;
+    }
+
+    float inner = MAX_DISTANCE * 0.8;
+    float attenuation = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+    float factor = 1.0 - smoothstep(inner, MAX_DISTANCE, dist);
+    float lightLevel = clamp(WORLD_PARAMETERS.z, 0.2, 1.0);
+    float baseMul = (1 - lightLevel) * attenuation * factor;
+
+    color.r *= 1 + baseMul;
+    color.g *= 1 + baseMul * 0.9;
+    color.b *= 1 + baseMul * 0.8;
+
+    gl_FragColor = color;
+}
