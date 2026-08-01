@@ -3,6 +3,7 @@ from .engine.architect.plugins.animation.components.animClient import AnimationE
 from .engine.architect.utils.persona.client import PersonaRendererComponent
 from .engine.architect.plugins.input.client import InputAction, InputState, InputExComponent
 
+from .assets.animMeta import AnimMeta
 from .assets.animations import GenericMapping
 
 PlayerPersona = {
@@ -53,13 +54,13 @@ class AnimPlayerClient(ClientSubsystem):
         inputEx = getOrCreateComponent(id, InputExComponent)
         inputEx.preventAttack = True
         renderer.addRenderConf(PlayerPersona, False)
+        animEx.registerMetadatas(AnimMeta)
         animEx.registerAnimations(GenericMapping)
         animEx.updateActorAnimDef()
         for animKey in GenericMapping.keys():
             animEx.registerEasing(
                 animKey,
                 AnimationEasingConf(1, 0.15, AnimationEasingTypes.SINE),
-                AnimationEasingConf(0, 0.24, AnimationEasingTypes.CUBIC),
             )
 
     @Sched.Render()

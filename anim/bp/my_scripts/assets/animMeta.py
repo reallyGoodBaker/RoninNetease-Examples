@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 AnimMeta = {
     "animation.standard_steve.idle": {
         "loop": True,
@@ -28,7 +29,7 @@ AnimMeta = {
         "length": 0.25
     },
     "animation.standard_steve.attack.diamond": {
-        "loop": "hold_on_last_frame",
+        "loop": False,
         "length": 0.4167,
         "notifies": {
             "0.0": [

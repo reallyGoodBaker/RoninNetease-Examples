@@ -1,6 +1,6 @@
 from ..engine.architect.plugins.input.utils.mappingContext import InputMapping, InputBinding
 from ..engine.architect.plugins.input.enum import InputType, MouseKey
-from ..engine.architect.plugins.input.utils.trigger import TriggerPressed
+from ..engine.architect.plugins.input.utils.trigger import TriggerDown
 
 
 InputMapping(
@@ -9,7 +9,7 @@ InputMapping(
             InputType.Key, MouseKey.Left,
             'IA_Attack',
             triggers=[
-                TriggerPressed(),
+                TriggerDown(),
             ]
         )
 ])

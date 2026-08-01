@@ -20,7 +20,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.canTick = True
         level = LevelClient.getInstance()
         self.audio = level.customAudio
-        self.postProcess = level.postProcess
+        # self.postProcess = level.postProcess
         self.playerView = level.playerView
         self.cam = level.camera
         self.lastZRot = 0
@@ -88,7 +88,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
             self._muzzleFlashTimer -= dt
             if self._muzzleFlashTimer <= 0:
                 self._muzzleFlashActive = False
-                self.postProcess.SetEnableByName('muzzle_flash', False)
+                # self.postProcess.SetEnableByName('muzzle_flash', False)
 
     def handleWeaponFollow(self, dt):
         p = dt * 20
@@ -100,16 +100,17 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.lastDy = _dy
 
     def handleCamVignette(self, t):
-        vignetteEnabled = self.postProcess.CheckVignetteEnabled()
-        vSmooth = self.vSmooth
-        vSLerp = lerp(self.lastVSmooth, vSmooth, t)
-        self.lastVSmooth = vSLerp
-        if vSLerp > 0.01 and not vignetteEnabled:
-            self.postProcess.SetEnableVignette(True)
-        if vSLerp < 0.01 and vignetteEnabled:
-            self.postProcess.SetEnableVignette(False)
-        self.postProcess.SetVignetteSmoothness(vSLerp)
-        self.postProcess.SetVignetteRadius(0.8)
+        # vignetteEnabled = self.postProcess.CheckVignetteEnabled()
+        # vSmooth = self.vSmooth
+        # vSLerp = lerp(self.lastVSmooth, vSmooth, t)
+        # self.lastVSmooth = vSLerp
+        # if vSLerp > 0.01 and not vignetteEnabled:
+        #     self.postProcess.SetEnableVignette(True)
+        # if vSLerp < 0.01 and vignetteEnabled:
+        #     self.postProcess.SetEnableVignette(False)
+        # self.postProcess.SetVignetteSmoothness(vSLerp)
+        # self.postProcess.SetVignetteRadius(0.8)
+        pass
 
     def handleCamZRot(self, t):
         zRot = self.zRot
@@ -124,13 +125,13 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.isAiming = True
         self.fovScale = fovScale
         self.vSmooth = vSmooth
-        self.postProcess.SetEnableByName('scope', True)
+        # self.postProcess.SetEnableByName('scope', True)
 
     def stopAiming(self):
         self.isAiming = False
         self.fovScale = 1.0
         self.vSmooth = 0.0
-        self.postProcess.SetEnableByName('scope', False)
+        # self.postProcess.SetEnableByName('scope', False)
 
     _muzzleFlashTimer = 0.0
     _muzzleFlashActive = False
@@ -145,8 +146,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         addTimer(0.05, _restore, False)
 
         # 枪口火焰：3D 空间点光源（先关再开确保参数更新）
-        self.postProcess.SetEnableByName('muzzle_flash', False)
-        self.postProcess.SetEnableByName('muzzle_flash', True)
+        # self.postProcess.SetEnableByName('muzzle_flash', False)
+        # self.postProcess.SetEnableByName('muzzle_flash', True)
         self._muzzleFlashTimer = 0.05
         self._muzzleFlashActive = True
 

@@ -111,7 +111,7 @@
 			"blend_weight": "v.blendex.standard_steve.stop"
 		},
 		"animation.standard_steve.attack.diamond": {
-			"loop": "hold_on_last_frame",
+			"loop": false,
 			"animation_length": 0.4167,
 			"anim_time_update": "v.anim_timeex.standard_steve.attack.diamond",
 			"blend_weight": "v.blendex.standard_steve.attack.diamond",
