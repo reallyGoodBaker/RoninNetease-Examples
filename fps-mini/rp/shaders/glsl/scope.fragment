@@ -74,11 +74,11 @@ void main()
         return;
     }
 
-    vec2 uvZoomed = (uv - 0.5) / 2.0 + 0.5;
+    vec2 uvZoomed = (uv - 0.5) / 1.7 + 0.5;
     uvZoomed = clamp(uvZoomed, 0.0, 1.0);
 
     vec4 texColor = texture2D(TEXTURE_0, uvZoomed);
     vec2 viewDir = (uv - 0.5) * 2.0;
-    float factor = 1 - smoothstep(0.0, 0.3, length(viewDir));
+    float factor = 1 - smoothstep(0.0, 0.5, length(viewDir));
     gl_FragColor = texColor * factor * factor * 1.2;
 }

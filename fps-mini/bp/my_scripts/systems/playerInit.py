@@ -13,7 +13,6 @@ WeaponMapping = {
     'roninexample:pistol': 'pistol',
     'roninexample:bolt': 'bolt',
     'roninexample:auto': 'auto',
-
 }
 
 @SubsystemClient
@@ -33,6 +32,10 @@ class PlayerInitSystem(ClientSubsystem):
     @EventListener()
     def onLeft(self, ev=events.LeftClickBeforeClientEvent()):
         self.shooter.pressTrigger()
+
+    @EventListener()
+    def onLeftRelease(self, ev=events.LeftClickReleaseClientEvent()):
+        self.shooter.releaseTrigger()
 
     @EventListener()
     def onAim(self, ev=events.RightClickBeforeClientEvent()):

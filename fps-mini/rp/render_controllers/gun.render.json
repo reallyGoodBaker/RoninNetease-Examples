@@ -29,6 +29,22 @@
                 { "*Arm": true },
                 { "*Sleeve": true }
             ]
+        },
+        "controller.render.fps.arm": {
+            "geometry": "geometry.weapon",
+            "textures": [
+                "texture.default"
+            ],
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "part_visibility": [
+                { "*": false },
+                { "*arm": true },
+                { "*sleeve": true }
+            ]
         }
     }
 }

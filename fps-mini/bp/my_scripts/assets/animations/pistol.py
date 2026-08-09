@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 Asset = {
-    'fp.hold': 'animation.template.weapons.pistol.fp.hold',
-    'fp.run': 'animation.template.weapons.pistol.fp.run',
-    'fp.aim': 'animation.template.weapons.pistol.fp.aim',
+    'fp.hold': 'animation.template.pistol.hold',
+    'fp.run': 'animation.template.pistol.run',
+    'fp.aim': 'animation.template.pistol.aim',
 
-    'fp.shoot': 'animation.template.weapons.pistol.fp.shoot',
-    'fp.aim_shoot': 'animation.template.weapons.pistol.fp.aim_shoot',
-    'fp.reload': 'animation.template.weapons.pistol.fp.reload',
-    'fp.slideopen': 'animation.template.weapons.pistol.fp.slideopen',
-    'fp.slideclose': 'animation.template.weapons.pistol.fp.slideclose',
+    'fp.shoot': 'animation.template.pistol.shoot',
+    'fp.aim_shoot': 'animation.template.pistol.aim_shoot',
+    'fp.reload': 'animation.template.pistol.reload',
+    'fp.slideopen': 'animation.template.pistol.slideopen',
+    'fp.slideclose': 'animation.template.pistol.slideclose',
 }

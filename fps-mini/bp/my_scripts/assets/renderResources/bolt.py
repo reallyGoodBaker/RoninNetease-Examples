@@ -9,7 +9,7 @@ Asset = {
     RenderResources.Materials: {
         'weapon': 'netease_entity_alphatest_metallic',
         'glow': 'entity_emissive_alpha',
-        'scope': 'entity_alphablend',
+        'scope': 'scope',
     },
     RenderResources.Textures: {
         'weapon': 'textures/entity/weapons/bolt',

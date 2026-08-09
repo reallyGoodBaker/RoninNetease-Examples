@@ -10,8 +10,8 @@ Asset = {
     'bolt': {
         'cycleMode': 'auto',        # 循环模式: 'manual'(手动,如栓动) / 'auto'(自动回正,半自动/全自动)
         'disconnector': 'none',   # 单发杆状态: 'none' 只允许连发, 'enable‘ 只允许单发, 'switch' 允许动态切换连发单发状态, 这个属性对手动枪机无效
-        'boltOpenTime': 0.02,   # 击发后枪机完全打开的时间
-        'boltCloseTime': 0.02,  # 枪机从完全打开回到关闭的时间
+        'boltOpenTime': 0.05,   # 击发后枪机完全打开的时间
+        'boltCloseTime': 0.1,  # 枪机从完全打开回到关闭的时间
         'boltOpenAnim': 'fp.boltopen',        # 击发后枪机完全打开的动画
         'boltCloseAnim': 'fp.boltclose',       # 枪机从完全打开回到关闭的动画
         # 通用属性：
@@ -34,14 +34,20 @@ Asset = {
 
     # 供弹组件 - 决定弹药容纳方式与换弹流程
     'feed': {
-        'magazineCapacity': 15,                     # 供弹具容量 (int)
-        'ammoType': [ 'bullets.template' ],     # 兼容的弹药Asset列表
+        'magazineCapacity': 20,                     # 供弹具容量 (int)
+        'ammoType': [ 'bullets.rifle' ],     # 兼容的弹药Asset列表
         'reloadModes': [
             {
                 'condition': 'empty',           # 在子弹完全空了的时候换弹
                 'reloadType': 'replace',        # 将子弹数替换到 magazineCapacity
-                'reloadTime': 1.25,              # 完全换弹耗时(空仓或战术换弹), replace时为主要耗时
-                'animation': 'fp.reload',                # 换弹动画
+                'reloadTime': 2.2,              # 完全换弹耗时(空仓或战术换弹), replace时为主要耗时
+                'animation': 'fp.reload_empty',                # 换弹动画
+            },
+            {
+                'condition': 'not_full',        # 在子弹没有填满的时候
+                'reloadType': 'replace',
+                'reloadTime': 1.6,
+                'animation': 'fp.reload',
             },
         ]
     },
@@ -79,7 +85,7 @@ Asset = {
             'animation': 'fp.shoot'
         },
         'aim': {     # 基础瞄准功能
-            'scale': 1.2,
+            'scale': 2.0,
             'animation': 'fp.aim',
             'shootAnim': 'fp.aim_shoot',
         },

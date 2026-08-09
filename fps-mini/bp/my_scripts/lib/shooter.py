@@ -76,7 +76,7 @@ class GunBasic(object):
         self.reloadTimer = None
         self.canCycle = True
         self.safe = False
-        self.autoMode = GunAutoState.Full
+        self.autoMode = self.bolt['disconnector'] in ('enable', 'switch') and GunAutoState.Semi or GunAutoState.Full
         self.stun = None
 
     @Async
@@ -147,10 +147,12 @@ class GunBasic(object):
                 return
             self.curState = GunState.Firing
             yield self.wait(self.triggerDelay)
+            self.pressingTrigger = True
             self.tryFireBullet()
             self.curState = GunState.Hold
             return
 
+        self.pressingTrigger = True
         burstCount = self.trigger.get('burstCount', 1)
         everySpan = self.triggerDelay / burstCount
         for _ in range(burstCount):
@@ -208,6 +210,7 @@ class GunBasic(object):
         self.boltOpend = False
         self.curState = GunState.Hold
 
+        print not isManualCycle, not isEmpty, self.autoMode, self.pressingTrigger
         if not isManualCycle and not isEmpty        \
             and self.autoMode == GunAutoState.Full  \
             and self.pressingTrigger:
@@ -595,6 +598,10 @@ class ShooterSystem(ClientSubsystem, StateTree):
             self.sprintBannedRemains += 0.2
         self.weapon.interruptReloading()
         self.weapon.pressTrigger()
+
+
+    def releaseTrigger(self):
+        self.weapon.releaseTrigger()
 
 
     def startAiming(self):

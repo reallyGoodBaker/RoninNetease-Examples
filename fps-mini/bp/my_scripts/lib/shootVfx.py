@@ -3,6 +3,7 @@ from ..engine.architect.compact import (
     LevelClient, QueryVariable, localPlayerId,
     addTimer,
     EventListener, events,
+    compClient,
 )
 from ..engine.architect.math.double import alerp, lerp, clamp
 
@@ -11,6 +12,10 @@ from ..engine.architect.math.double import alerp, lerp, clamp
 yRot = QueryVariable('y_rot')
 xRot = QueryVariable('x_rot')
 isFirstPerson = QueryVariable('is_first_person')
+walkShakeScale = QueryVariable('shake_scale')
+controlX = QueryVariable('control_x')
+controlY = QueryVariable('control_y')
+controlZ = QueryVariable('control_z')
 
 
 @SubsystemClient
@@ -20,12 +25,15 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.canTick = True
         level = LevelClient.getInstance()
         self.audio = level.customAudio
-        # self.postProcess = level.postProcess
+        self.attr = compClient.CreateAttr(localPlayerId())
+        self.postProcess = level.postProcess
+        self.actorMotion = compClient.CreateActorMotion(localPlayerId())
         self.playerView = level.playerView
         self.cam = level.camera
         self.lastZRot = 0
         self.zRot = 0
         self.zRotAdders = {} # type: dict[str, float]
+        self.cameraShake = True
 
         rot = self.cam.GetCameraRotation()
         self.lastXRot = rot[0]
@@ -79,18 +87,45 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     def onRender(self, dt):
         t = dt * 25
         self.handleWeaponFollow(dt)
+        self.handleCamZOnCamRot()
         self.handleCamZRot(t)
+        self.handleWalkShakeScale(t)
+        self.handleControlZRotFromMovement(dt)
         self.handleCamVignette(dt * 4)
         self.handleMuzzleFlashDisappear(dt)
+
+    def handleCamZOnCamRot(self):
+        x = self.actorMotion.GetInputVector()[0] * 0.5
+        self.zRotAdders['zOnRot'] = clamp(self.lastDy * 0.5 - x, -1, 1)
+
+    def handleControlZRotFromMovement(self, dt):
+        localId = localPlayerId()
+        x = self.actorMotion.GetInputVector()[0] * 5
+        zRot = lerp(controlZ.getValue(localId), x, dt * 8)
+        controlZ.setValue(localPlayerId(), zRot)
+
+    def handleWalkShakeScale(self, t):
+        localId = localPlayerId()
+        targetWalkShake = not self.attr.isEntityOnGround() and 0 \
+            or self.isAiming and 0.4 or 1
+        shakeScale = lerp(walkShakeScale.getValue(localId), targetWalkShake, t)
+        walkShakeScale.setValue(localId, shakeScale)
 
     def handleMuzzleFlashDisappear(self, dt):
         if self._muzzleFlashActive:
             self._muzzleFlashTimer -= dt
             if self._muzzleFlashTimer <= 0:
                 self._muzzleFlashActive = False
-                # self.postProcess.SetEnableByName('muzzle_flash', False)
+                self.postProcess.SetEnableByName('muzzle_flash', False)
 
     def handleWeaponFollow(self, dt):
+        if self.isAiming:
+            xRot.setValue(localPlayerId(), 0)
+            yRot.setValue(localPlayerId(), 0)
+            self.lastDx = 0
+            self.lastDy = 0
+            return
+
         p = dt * 20
         _dx = lerp(self.lastDx, self.dx, p)
         _dy = lerp(self.lastDy, self.dy, p)
@@ -100,17 +135,16 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.lastDy = _dy
 
     def handleCamVignette(self, t):
-        # vignetteEnabled = self.postProcess.CheckVignetteEnabled()
-        # vSmooth = self.vSmooth
-        # vSLerp = lerp(self.lastVSmooth, vSmooth, t)
-        # self.lastVSmooth = vSLerp
-        # if vSLerp > 0.01 and not vignetteEnabled:
-        #     self.postProcess.SetEnableVignette(True)
-        # if vSLerp < 0.01 and vignetteEnabled:
-        #     self.postProcess.SetEnableVignette(False)
-        # self.postProcess.SetVignetteSmoothness(vSLerp)
-        # self.postProcess.SetVignetteRadius(0.8)
-        pass
+        vignetteEnabled = self.postProcess.CheckVignetteEnabled()
+        vSmooth = self.vSmooth
+        vSLerp = lerp(self.lastVSmooth, vSmooth, t)
+        self.lastVSmooth = vSLerp
+        if vSLerp > 0.01 and not vignetteEnabled:
+            self.postProcess.SetEnableVignette(True)
+        if vSLerp < 0.01 and vignetteEnabled:
+            self.postProcess.SetEnableVignette(False)
+        self.postProcess.SetVignetteSmoothness(vSLerp)
+        self.postProcess.SetVignetteRadius(0.8)
 
     def handleCamZRot(self, t):
         zRot = self.zRot
@@ -125,13 +159,13 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.isAiming = True
         self.fovScale = fovScale
         self.vSmooth = vSmooth
-        # self.postProcess.SetEnableByName('scope', True)
+        self.postProcess.SetEnableByName('scope', True)
 
     def stopAiming(self):
         self.isAiming = False
         self.fovScale = 1.0
         self.vSmooth = 0.0
-        # self.postProcess.SetEnableByName('scope', False)
+        self.postProcess.SetEnableByName('scope', False)
 
     _muzzleFlashTimer = 0.0
     _muzzleFlashActive = False
@@ -146,8 +180,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         addTimer(0.05, _restore, False)
 
         # 枪口火焰：3D 空间点光源（先关再开确保参数更新）
-        # self.postProcess.SetEnableByName('muzzle_flash', False)
-        # self.postProcess.SetEnableByName('muzzle_flash', True)
+        self.postProcess.SetEnableByName('muzzle_flash', False)
+        self.postProcess.SetEnableByName('muzzle_flash', True)
         self._muzzleFlashTimer = 0.05
         self._muzzleFlashActive = True
 
