@@ -37,7 +37,7 @@ Asset = {
     # 供弹组件 - 决定弹药容纳方式与换弹流程
     'feed': {
         'magazineCapacity': 10,                     # 供弹具容量 (int)
-        'ammoType': [ 'bullets.rifle' ],     # 兼容的弹药Asset列表
+        'ammoType': [ 'bullets.fullpower' ],     # 兼容的弹药Asset列表
         'reloadModes': [
             {
                 'condition': 'clip_available',  # 在子弹可以分多漏夹装弹时

@@ -4,21 +4,9 @@
 		"animation.template.weapons.fp.rot": {
 			"loop": "hold_on_last_frame",
 			"bones": {
-				"root": {
-					"rotation": ["q.mod.control_x", "q.mod.control_y + (q.mod.is_first_person ? 180 : 0)", "-q.mod.control_z"],
-                    "position": [0, 27.5, 0]
-				},
-				"body": {
-					"rotation": ["q.mod.x_rot", "q.mod.y_rot", 0],
-					"position": [
-						"v.fpbody_px = math.lerp(v.fpbody_px ?? 0, -math.cos(q.modified_distance_moved * (q.is_sprinting ? 20 : 15)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.4 : 0.2), 0.1) * q.mod.shake_scale; return v.fpbody_px;",
-						"v.fpbody_py = math.lerp(v.fpbody_py ?? 0, math.sin(q.modified_distance_moved * (q.is_sprinting ? 45 : 35)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.5 : 0.15), 0.1) * q.mod.shake_scale; return v.fpbody_py - 27.5;",
-						"v.fpbody_pz = math.lerp(v.fpbody_pz ?? 0, math.cos(q.modified_distance_moved * (q.is_sprinting ? 20 : 15)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.3 : 0.1), 0.1) * q.mod.shake_scale; return v.fpbody_pz;"
-					]
-				},
                 "fpsroot": {
 					"rotation": [0, "q.mod.is_first_person ? 180 : 0", 0],
-                    "position": [0, 27.5, 0]
+                    "position": [0, "v.smoothvspeed = math.lerp(v.smoothvspeed ?? 0, math.clamp(q.vertical_speed, -6, 6), 0.2); v.smoothvspeed2 = math.lerp(v.smoothvspeed2 ?? 0, math.clamp(v.smoothvspeed, -6, 6), 0.1); v.smoothvspeed3 = math.lerp(v.smoothvspeed3 ?? 0, math.clamp(v.smoothvspeed2, -6, 6), 0.1); return v.smoothvspeed3 * -0.3 * q.mod.shake_scale;", 0]
 				},
                 "control": {
                     "rotation": [
@@ -27,9 +15,9 @@
                         "q.mod.control_z"
                     ],
                     "position": [
-						"v.fpbody_px = math.lerp(v.fpbody_px ?? 0, -math.cos(q.modified_distance_moved * (q.is_sprinting ? 20 : 15)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.4 : 0.2), 0.1) * q.mod.shake_scale; return v.fpbody_px;",
-						"v.fpbody_py = math.lerp(v.fpbody_py ?? 0, math.sin(q.modified_distance_moved * (q.is_sprinting ? 45 : 35)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.5 : 0.15), 0.1) * q.mod.shake_scale; return v.fpbody_py;",
-						"v.fpbody_pz = math.lerp(v.fpbody_pz ?? 0, math.cos(q.modified_distance_moved * (q.is_sprinting ? 20 : 15)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.3 : 0.1), 0.1) * q.mod.shake_scale; return v.fpbody_pz;"
+						"v.fpbody_px = math.lerp(v.fpbody_px ?? 0, -math.cos(q.modified_distance_moved * (q.is_sprinting ? 28 : 20)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.8 : 0.4), 0.1) * q.mod.walk_scale; return v.fpbody_px;",
+						"v.fpbody_py = math.lerp(v.fpbody_py ?? 0, math.sin(q.modified_distance_moved * (q.is_sprinting ? 56 : 40)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 1.2 : 0.5), 0.1) * q.mod.walk_scale; return v.fpbody_py;",
+						"v.fpbody_pz = math.lerp(v.fpbody_pz ?? 0, math.cos(q.modified_distance_moved * (q.is_sprinting ? 28 : 20)) * math.clamp(q.modified_move_speed, 0, 1) * (q.is_sprinting ? 0.6 : 0.2), 0.1) * q.mod.walk_scale; return v.fpbody_pz;"
 					]
                 }
 			}

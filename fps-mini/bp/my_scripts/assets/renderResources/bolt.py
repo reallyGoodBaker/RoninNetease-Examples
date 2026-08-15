@@ -18,7 +18,7 @@ Asset = {
         'root_rot': 'animation.template.weapons.fp.rot',
     },
     RenderResources.RenderControllers: [
-        'controller.render.template.weapon',
-        'controller.render.template.arm',
+        { 'controller.render.template.weapon': 'v.is_first_person' },
+        { 'controller.render.fps.arm': 'v.is_first_person' },
     ],
 }

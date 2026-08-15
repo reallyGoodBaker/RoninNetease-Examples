@@ -52,21 +52,9 @@ AnimMeta = {
         "loop": "hold_on_last_frame",
         "length": 0.3333
     },
-    "animation.weapons.bolt.fp.cycle_bolt": {
-        "loop": "hold_on_last_frame",
-        "length": 0.8333
-    },
-    "animation.weapons.bolt.fp.cycle_bolt_aiming": {
-        "loop": "hold_on_last_frame",
-        "length": 0.8333
-    },
     "animation.weapons.bolt.fp.run": {
         "loop": "hold_on_last_frame",
         "length": -1
-    },
-    "animation.weapons.bolt.fp.reload_clip": {
-        "loop": "hold_on_last_frame",
-        "length": 1.2917
     },
     "animation.weapons.bolt.fp.bolt_open": {
         "loop": "hold_on_last_frame",
@@ -78,11 +66,15 @@ AnimMeta = {
     },
     "animation.weapons.bolt.fp.bolt_open_aim": {
         "loop": "hold_on_last_frame",
-        "length": 0.4375
+        "length": 0.75
     },
     "animation.weapons.bolt.fp.bolt_close_aim": {
         "loop": "hold_on_last_frame",
         "length": 0.4375
+    },
+    "animation.weapons.bolt.fp.reload_clip": {
+        "loop": "hold_on_last_frame",
+        "length": 1.2917
     },
     "animation.weapons.bolt.fp.reload_single": {
         "loop": "hold_on_last_frame",

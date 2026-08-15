@@ -6,14 +6,14 @@
 # ============================================
 
 Asset = {
-    'itemType': 'roninexample:ammo556',
+    'itemType': 'roninexample:ammo762',
 
     # 弹道
     'projectile': {
-        'baseSpeed': 400,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
+        'baseSpeed': 700,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
         'gravity': -2,                  # 重力值（为了娱乐性不采用真实的重力）
         'drag': 0.005,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
-        'caliber': '556',             # 口径标识 (string), 作为 customTag 传入 hurt 组件
+        'caliber': '762',             # 口径标识 (string), 作为 customTag 传入 hurt 组件
         'bounce': False,                # 子弹可弹跳（比如榴弹）
         'ignoreEntities': 'penetrate.entities',     # 子弹不处理的实体
     },
@@ -30,7 +30,7 @@ Asset = {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
         'damageRetentionPerPass': 0.7,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.7,            # 每次穿透后速度保留比例
-        'minPenetrateSpeed': 380,                   # 最小穿透速度
+        'minPenetrateSpeed': 600,                   # 最小穿透速度
     },
 
     # --- 弹头载荷数组 (命中后按顺序激活的效果) ---
@@ -71,6 +71,6 @@ Asset = {
     },
     'modelAsset': {
         'bulletEntity': '',                 # 子弹客户端实体 type string
-        'casingEntity': 'casing_556'         # 弹壳模型ID (用于抛壳)
+        'casingEntity': 'casing_762'         # 弹壳模型ID (用于抛壳)
     }
 }

@@ -210,7 +210,6 @@ class GunBasic(object):
         self.boltOpend = False
         self.curState = GunState.Hold
 
-        print not isManualCycle, not isEmpty, self.autoMode, self.pressingTrigger
         if not isManualCycle and not isEmpty        \
             and self.autoMode == GunAutoState.Full  \
             and self.pressingTrigger:

@@ -7,7 +7,7 @@ from ..engine.architect.compact import (
     LevelClient, addTimer, Sched,
     vec, modulo, Vector3, normalize, tup, mul,
     clientApi, compClient, localPlayerId,
-    Curve,
+    Curve, getBonePosition
 )
 from ..engine.architect.math.utils import entityAabbDef, pointToLineDist
 from ..engine.architect.math.double import clamp
@@ -147,7 +147,7 @@ class BulletBase(object):
         min, max = entityAabbDef(entityId)
         halfHeadHeight = (max[1] - min[1]) / 2
         radius = math.sqrt((max[0] - min[0]) ** 2 + (max[1] - min[1]) ** 2 + (max[2] - min[2]) ** 2) / 2
-        x, y, z = compClient.CreateModel(entityId).GetBonePositionFromMinecraftObject('head') or (0, 0, 0)
+        x, y, z = getBonePosition(entityId, 'head') or (0, 0, 0)
         hitPos = result['hitPos']
         headCenterToRay = pointToLineDist(vec((x, y + halfHeadHeight, z)), vec(hitPos), vDir)
         isHeadShot = headCenterToRay <= radius
