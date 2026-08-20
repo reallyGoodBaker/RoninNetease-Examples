@@ -38,6 +38,7 @@ Asset = {
 
     # 供弹组件 - 决定弹药容纳方式与换弹流程
     'feed': {
+        'canInterrupt': True,                       # 换弹是否可被打断
         'magazineCapacity': 30,                     # 供弹具容量 (int)
         'ammoType': [ 'bullets.baseTemplate' ],     # 兼容的弹药Asset列表
         'reloadModes': [

@@ -7,6 +7,7 @@ from ..engine.architect.compact import (
     LevelClient, getOrCreateComponent,
     compClient, clientApi,
     TimerAdapter, addTimer,
+    remote,
 )
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent, AnimationEasingConf
 from ..engine.architect.plugins.animation.enum import AnimationEasingTypes
@@ -85,6 +86,10 @@ class GunBasic(object):
         self.stun = ftr
         yield ftr
         self.stun = None
+
+
+    def isManuallyCyclingBolt(self):
+        return self.boltCycleMode == 'manual' and self.curState == GunState.Cycling
 
 
     def isWaiting(self):
@@ -374,7 +379,6 @@ class NativeMinecraftState(StateNode):
 
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
-        tree.banSprint(False)
         if tree.persona.hasModified():
             tree.persona.resetPlayerRenderConf()
             tree.persona.restorePlayerRootAnim()
@@ -417,13 +421,7 @@ class AimingState(StateNode):
     def canExit(self, tree):
         # type: (ShooterSystem) -> None
         # 手动枪机动画在 default layer，拉栓时禁止退出以防动画被覆盖
-        if tree.weapon.bolt['cycleMode'] == 'manual':
-            # 跑步可以强制打断
-            if tree.player.isSprinting():
-                return True
-            return tree.weapon.curState != GunState.Cycling
-        # 自动枪机动画在独立 layer，不涉及冲突
-        return True
+        return not tree.weapon.isManuallyCyclingBolt()
     
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
@@ -471,8 +469,18 @@ class ReloadingState(StateNode):
         # type: (ShooterSystem) -> None
         return tree.weapon is not None and tree.weapon.curState == GunState.Reloading
     
+    def canExit(self, tree):
+        # type: (ShooterSystem) -> None
+        return tree.weapon.feed['canInterrupt'] or tree.weapon.curState == GunState.Hold
+    
     def enter(self, previous, tree):
+        # type: (StateNode, ShooterSystem) -> None
+        if not tree.weapon.feed['canInterrupt']:
+            tree.operation.SetCanWalkMode(False)
         print 'Reloading'
+
+    def exit(self, next, tree):
+        tree.operation.SetCanWalkMode(True)
 
     def update(self, tree):
         # type: (ShooterSystem) -> None
@@ -484,6 +492,10 @@ class IdleState(StateNode):
     def canEnter(self, tree):
         # type: (ShooterSystem) -> None
         return not tree.aiming and not tree.player.isSprinting()
+    
+    def canExit(self, tree):
+        # type: (ShooterSystem) -> None
+        return not tree.weapon.isManuallyCyclingBolt()
 
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
@@ -505,7 +517,6 @@ class ShooterSystem(ClientSubsystem, StateTree):
     shooterState = ShooterState.Idle
     weapon = None # type: GunBasic | None
     sprintBannedRemains = 0.0
-    canSprint = True
     aiming = False
     aimingTime = 0
 
@@ -540,24 +551,6 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.createNode(IdleState, PostureState.Idle, armedNode)
 
 
-    def onUpdate(self, dt):
-        self.execute()
-
-
-    def banSprint(self, bool=True):
-        if bool: self.actorMotion.EndSprinting()
-        self.canSprint = not bool
-        self.operation.SetCanWalkMode(not bool)
-
-
-    def handleSprintModeChange(self, dt):
-        self.sprintBannedRemains = clamp(self.sprintBannedRemains - dt, 0, 1)
-        if self.canSprint and self.sprintBannedRemains > 0.1:
-            self.banSprint()
-        else:
-            self.banSprint(False)
-
-
     def recordAimingTime(self, dt):
         if self.aiming:
             self.aimingTime += dt
@@ -566,7 +559,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
 
     def onRender(self, dt):
-        self.handleSprintModeChange(dt)
+        self.execute()
         self.recordAimingTime(dt)
 
 
@@ -604,6 +597,8 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
 
     def startAiming(self):
+        if self.currentStateName() == PostureState.Sprinting:
+            return
         if self.weapon and self.weapon.curState == GunState.Cycling:
             return
         self.aiming = True
@@ -640,7 +635,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
 
     def reload(self):
-        if self.weapon.canReload():
+        if not self.player.isSprinting() and self.weapon.canReload():
             self.aiming = False
             self.weapon.aiming = False
             self.sprintBannedRemains += 0.2
