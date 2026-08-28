@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 from ...engine.architect.plugins.animation.components.animClient import AnimationEasingConf, AnimationEasingTypes
 
-defaultInConf = AnimationEasingConf(1, 0.15)
+defaultInConf = AnimationEasingConf(1, 0.15, AnimationEasingTypes.SINE)
 
 Asset = {
     'fp.hold':          AnimationEasingConf(1, 0.2),
-    'fp.run':           defaultInConf,
+    'fp.run':           AnimationEasingConf(1, 0.3, AnimationEasingTypes.SINE),
     'fp.shoot':         defaultInConf,
-    'fp.aim':           AnimationEasingConf(1, 0.1),
-    'fp.aim_shoot':     defaultInConf,
     'fp.reload':        defaultInConf,
-    'fp.reload_empty':        defaultInConf,
+    'fp.reload_empty':  defaultInConf,
+    'fp.slideopen':     defaultInConf,
+    'fp.slideclose':    defaultInConf,
 }

@@ -1,0 +1,164 @@
+from ..engine.architect.compact import (
+    localPlayerId, compClient,
+    Component, getOrCreateComponent, BaseCompClient,
+    getOneComponent,
+    SubsystemClient, ClientSubsystem,
+    Asset,
+    CustomEvent, EventListener, events,
+    getBonePosition,
+)
+
+# TODO: Remove these imports
+from mod.client.component.actorRenderCompClient import ActorRenderCompClient
+
+FP_COND = 'v.is_first_person && !q.is_spectator'
+TP_COND = '!v.is_first_person && !v.map_face_icon && !q.is_spectator'
+
+
+def setNativeRenderControllerEnabled(renderer, enable=True):
+    # type: (ActorRenderCompClient, bool) -> None
+    if enable:
+        renderer.AddPlayerRenderController('controller.render.player.first_person', FP_COND)
+        renderer.AddPlayerRenderController('controller.render.player.third_person', TP_COND)
+    else:
+        renderer.RemovePlayerRenderController('controller.render.player.first_person')
+        renderer.RemovePlayerRenderController('controller.render.player.third_person')
+
+
+def setNativeRootAnimationEnabled(renderer, enabled=True):
+    # type: (ActorRenderCompClient, bool) -> None
+    if enabled:
+        renderer.AddPlayerScriptAnimate('root', autoReplace=True)
+    else:
+        renderer.AddPlayerScriptAnimate('root', '0', True)
+
+
+def findResource(entityId, renderer, resType, key):
+    # type: (str, ActorRenderCompClient, str, str) -> None
+    keys = renderer.GetActorRenderParams(entityId, resType)
+    if not keys or key not in keys:
+        return None
+    index = keys.index(key)    
+    return renderer.GetActorRenderParams(entityId, resType, True)[index]
+
+
+@Component()
+class LocalPlayerRenderParams(BaseCompClient):
+    geometry = None
+    first = []
+    third = []
+
+    def onCreate(self, entityId):
+        self.entityId = entityId
+
+    def reset(self):
+        self.geometry = None
+        self.first = []
+        self.third = []
+
+
+def applyRenderResource(renderer, asset, renderParams):
+    # type: (ActorRenderCompClient, dict, LocalPlayerRenderParams) -> None
+    setNativeRenderControllerEnabled(renderer, False)
+    setNativeRootAnimationEnabled(renderer, False)
+
+    # 网易的bug，如果不删除某个组并重新添加，它会导致某个组的粒子绑定出问题
+    renderer.AddPlayerGeometry('default', 'geometry.humanoid.custom')
+    renderer.RebuildPlayerRender()
+
+    if not renderParams.geometry:
+        renderParams.geometry = findResource(renderParams.entityId, renderer, 'geometry', 'default')
+    renderer.AddPlayerGeometry('default', asset['model'])
+    renderer.AddPlayerGeometry('arms', asset['arms'])
+    for k, v in asset['materials'].items():
+        renderer.AddPlayerRenderMaterial(k, v)
+    renderer.AddPlayerTexture('weapon', asset['texture'])
+    first = asset['render']['first_person']
+    third = asset['render']['third_person']
+    renderParams.first = first
+    renderParams.third = third
+    for renderController in first:
+        renderer.AddPlayerRenderController(renderController, FP_COND)
+    for renderController in third:
+        renderer.AddPlayerRenderController(renderController, TP_COND)
+
+    renderer.AddPlayerAnimation('custom_root', 'animation.template.weapons.fp.rot')
+    renderer.AddPlayerScriptAnimate('custom_root', autoReplace=True)
+    renderer.RebuildPlayerRender()
+
+
+def resetRenderResource(renderer, renderParams):
+    # type: (ActorRenderCompClient, LocalPlayerRenderParams) -> None
+    if not renderParams.geometry:
+        renderer.AddPlayerGeometry('default', 'geometry.humanoid.custom')
+    renderer.AddPlayerGeometry('default', renderParams.geometry)
+    renderer.AddPlayerScriptAnimate('custom_root', '0', True)
+    for renderController in renderParams.first:
+        renderer.RemovePlayerRenderController(renderController)
+    for renderController in renderParams.third:
+        renderer.RemovePlayerRenderController(renderController)
+
+    setNativeRenderControllerEnabled(renderer)
+    setNativeRootAnimationEnabled(renderer)
+
+    renderer.RebuildPlayerRender()
+
+
+@SubsystemClient
+class WeaponRenderSystem(ClientSubsystem):
+
+    WeaponMapping = {}
+
+    @classmethod
+    def registerAssetMapping(cls, mapping):
+        for k, v in mapping.items():
+            cls.WeaponMapping[k] = v
+
+
+    def initPlayerRender(self, entityId):
+        localId = localPlayerId()
+        if entityId != localId:
+            self.sendServer('requestResource', { 'entity': entityId, 'client': localId })
+            return
+
+        item = compClient.CreateItem(entityId).GetCarriedItem()
+        if not item:
+            self.sendServer('renderResource', { 'entity': entityId, 'uri': None })
+            return
+        assetUri = WeaponRenderSystem.WeaponMapping.get(item['newItemName'])
+        self.sendServer('renderResource', { 'entity': entityId, 'uri': assetUri })
+
+
+    def changeRenderResource(self, entity, assetUri):
+        renderer = compClient.CreateActorRender(entity)
+        if not assetUri:
+            renderParams = getOneComponent(entity, LocalPlayerRenderParams)
+            if not renderParams:
+                return
+            resetRenderResource(renderer, renderParams)
+            renderParams.reset()
+            return
+
+        applyRenderResource(
+            renderer,
+            Asset('renderResources.' + assetUri).load(True),
+            getOrCreateComponent(entity, LocalPlayerRenderParams)
+        )
+        # 网易bug，切换模型后需要手动绑定一次粒子，
+        # 不然之后第一次获取得到的结果一定是错的
+        getBonePosition(entity, 'muzzle')
+
+
+    @EventListener()
+    def onPlayerCreated(self, ev=events.AddPlayerCreatedClientEvent()):
+        self.initPlayerRender(ev.playerId)
+
+
+    @EventListener()
+    def onChangeCarriedItem(self, _=events.OnCarriedNewItemChangedClientEvent()):
+        self.initPlayerRender(localPlayerId())
+
+
+    @CustomEvent('syncResource')
+    def onSyncRenderResource(self, ev):
+        self.changeRenderResource(ev.entity, ev.uri)

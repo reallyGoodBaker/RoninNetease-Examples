@@ -10,7 +10,7 @@ Asset = {
 
     # 弹道
     'projectile': {
-        'baseSpeed': 200,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
+        'baseSpeed': 250,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
         'gravity': -2,                  # 重力值（为了娱乐性不采用真实的重力）
         'drag': 0.02,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
         'caliber': '9mm',               # 口径标识 (string), 作为 customTag 传入 hurt 组件
@@ -30,7 +30,7 @@ Asset = {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
         'damageRetentionPerPass': 0.5,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.5,            # 每次穿透后速度保留比例
-        'minPenetrateSpeed': 190,                   # 最小穿透速度
+        'minPenetrateSpeed': 260,                   # 最小穿透速度
     },
 
     # --- 弹头载荷数组 (命中后按顺序激活的效果) ---
@@ -65,12 +65,12 @@ Asset = {
 
     # --- 表现资源 ---
     'fxAsset': {
-        'tracer': 'fx_tracer_red',          # 曳光轨迹特效ID
-        'impactDecal': 'decal_bullet_hole', # 命中表面弹孔贴花ID
-        'hitFX': 'fx_impact_spark'          # 命中特效ID (物理表面)
+        'tracer': 'fx_tracer_red',              # 曳光轨迹特效ID
+        'impactDecal': 'decal_bullet_hole',     # 命中表面弹孔贴花ID
+        'hitFX': 'fx_impact_spark'              # 命中特效ID (物理表面)
     },
     'modelAsset': {
-        'bulletEntity': '',                 # 子弹客户端实体 type string
-        'casingEntity': 'casing_556'         # 弹壳模型ID (用于抛壳)
+        'bulletEntity': 'template:bullet_pistol',   # 子弹客户端实体 type string
+        'casingEntity': 'template:casing_762'   # 弹壳客户端实体 (用于抛壳)
     }
 }

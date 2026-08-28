@@ -12,7 +12,7 @@ LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
 LAYOUT_BINDING(1) uniform sampler2D TEXTURE_1;
 LAYOUT_BINDING(2) uniform sampler2D TEXTURE_2;
 
-uniform vec2 TIME_PARAMETERS;
+uniform vec4 EXTRA_VECTOR1; // xyz=枪口位置(相机相对坐标), w=昼夜亮度倍率
 
 highp vec3 getWorldPos(vec2 uv, float z) {
     highp vec4 pos = vec4(uv, z, 1.0) * 2.0 - 1.0;
@@ -20,7 +20,14 @@ highp vec3 getWorldPos(vec2 uv, float z) {
     return worldPos.xyz / worldPos.w;
 }
 
-const float MAX_DISTANCE = 16.0;
+const float MAX_DISTANCE = 40.0;
+
+// 用 FOG_COLOR 判断白天/晚上：这是引擎每帧都会提供的雾颜色，白天亮、晚上暗
+float getDayNightMul() {
+    float dayFactor = clamp(dot(FOG_COLOR.rgb, vec3(0.299, 0.587, 0.114)), 0.0, 1.0);
+    // 白天少提亮，晚上多提亮
+    return mix(3.5, 0.25, dayFactor);
+}
 
 highp vec3 colorTemperatureToLinearRGB(float progress) {
     // 限制在有效范围内
@@ -56,21 +63,46 @@ highp vec3 colorTemperatureToLinearRGB(float progress) {
 }
 
 void main() {
+    // DEBUG：当 EXTRA_VECTOR1.w > 10 时，全屏显示传入的 vec4 前三个分量
+    // 用于确认脚本是否真的把枪口位置/亮度传进来了。
+    if (EXTRA_VECTOR1.w > 10.0) {
+        gl_FragColor = vec4(EXTRA_VECTOR1.xyz * 0.5 + 0.5, 1.0);
+        return;
+    }
+
     vec4 color = texture2D(TEXTURE_0, uv);
     float depth = texture2D(TEXTURE_2, uv).r;
 
     highp vec3 worldPos = getWorldPos(uv, depth);
-    float dist = length(worldPos);
+    highp vec3 muzzlePos = EXTRA_VECTOR1.xyz;
+    float dist = length(worldPos - muzzlePos);
 
-    if (dist > MAX_DISTANCE || dist < 0.5) {
+    if (dist > MAX_DISTANCE) {
         gl_FragColor = color;
         return;
     }
 
-    float inner = MAX_DISTANCE * 0.8;
-    float attenuation = 1.0 / (1.0 + 0.09 * dist + 0.032 * dist * dist);
+    // 用深度重建面法线，只照亮朝向枪口的面：
+    // 手和枪身侧面朝向枪口时会被照亮，背面/背向枪口的面不会。
+    vec3 dpdx = dFdx(worldPos);
+    vec3 dpdy = dFdy(worldPos);
+    vec3 N = normalize(cross(dpdx, dpdy));
+    if (dot(N, -worldPos) < 0.0) {
+        N = -N;
+    }
+    vec3 toMuzzle = normalize(muzzlePos - worldPos);
+    float ndl = clamp(dot(N, toMuzzle), 0.0, 1.0);
+
+    float inner = MAX_DISTANCE * 0.9;
+    float attenuation = 1.0 / (1.0 + 0.03 * dist + 0.006 * dist * dist);
     float factor = 1.0 - smoothstep(inner, MAX_DISTANCE, dist);
-    float baseMul = 2.0 * attenuation * factor;
+
+    // 优先使用脚本传入的亮度倍率(EXTRA_VECTOR1.w)；没传时用 FOG_COLOR 兜底
+    float dayNightMul = EXTRA_VECTOR1.w > 0.0 ? EXTRA_VECTOR1.w : getDayNightMul();
+
+    // 只照亮朝向枪口的面：背向枪口/被遮挡的位置不亮
+    float lightAmount = smoothstep(0.0, 0.25, ndl);
+    float baseMul = 0.6 * attenuation * factor * dayNightMul * lightAmount;
 
     color.r *= 1.0 + baseMul;
     color.g *= 1.0 + baseMul * 0.7;

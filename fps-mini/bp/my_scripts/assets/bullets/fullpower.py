@@ -30,7 +30,7 @@ Asset = {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
         'damageRetentionPerPass': 0.7,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.7,            # 每次穿透后速度保留比例
-        'minPenetrateSpeed': 600,                   # 最小穿透速度
+        'minPenetrateSpeed': 580,                   # 最小穿透速度
     },
 
     # --- 弹头载荷数组 (命中后按顺序激活的效果) ---
@@ -70,7 +70,7 @@ Asset = {
         'hitFX': 'fx_impact_spark'          # 命中特效ID (物理表面)
     },
     'modelAsset': {
-        'bulletEntity': '',                 # 子弹客户端实体 type string
-        'casingEntity': 'casing_762'         # 弹壳模型ID (用于抛壳)
+        'bulletEntity': 'template:bullet',            # 子弹客户端实体 type string
+        'casingEntity': 'template:casing_762'         # 弹壳客户端实体 (用于抛壳)
     }
 }

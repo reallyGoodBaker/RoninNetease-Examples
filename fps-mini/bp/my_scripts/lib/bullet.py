@@ -7,19 +7,27 @@ from ..engine.architect.compact import (
     LevelClient, addTimer, Sched,
     vec, modulo, Vector3, normalize, tup, mul,
     clientApi, compClient, localPlayerId,
-    Curve, getBonePosition
+    Curve, getBonePosition,
+    QueryVariable,
 )
 from ..engine.architect.math.utils import entityAabbDef, pointToLineDist
 from ..engine.architect.math.double import clamp
 from ..engine.architect.core.configurator import modConf
 from ..engine.architect.utils.enhance.list import find
 
+x = QueryVariable('x')
+y = QueryVariable('y')
+z = QueryVariable('z')
+rx = QueryVariable('rx')
+ry = QueryVariable('ry')
+scale = QueryVariable('scale')
 
 class BulletBase(object):
 
     def create(self, asset, velocityModifier, direction, origin):
         # type: (dict, float, Vector3, Vector3) -> None
         projectile = asset['projectile']
+        localId = localPlayerId()
         self.ignoreEntities = Asset(projectile['ignoreEntities']).load(True)
         self.caliber = projectile['caliber']
         self.payloads = asset['payloads']
@@ -29,6 +37,8 @@ class BulletBase(object):
         self.initialSpeed = projectile['baseSpeed'] * velocityModifier # type: float
         self.gravity = vec((0, projectile['gravity'], 0)) # type: Vector3
         self.drag = projectile['drag'] # type: float
+        self.visualOffset = getBonePosition(localId, 'muzzle') - getBonePosition(localId, 'head')
+        self.origin = origin
         self.pos = origin
         self.velocity = mul(direction, self.initialSpeed) # type: Vector3
         self.speed = self.initialSpeed
@@ -41,6 +51,14 @@ class BulletBase(object):
         self.distance = 0
         self.damageRemains = 1.0
         self.step = -1
+
+        x, y, z = self.origin
+        self.dFrameTime = 0
+        self.clientEntity = ClientBulletSystem.getInstance().spawnEntity(
+            asset['modelAsset']['bulletEntity'],
+            (x, y + 100, z),
+            (0, 0)
+        )
 
 
     def getPayload(self, type):
@@ -62,6 +80,7 @@ class BulletBase(object):
         self.flyTime = currentTime - self.createTime
         curVelocity = self.velocity
         self.step += 1
+        self.dFrameTime = 0
 
         # 射线检测子弹命中
         self.bulletHitTest(clientBullet, self.pos, curVelocity, dt)
@@ -95,6 +114,33 @@ class BulletBase(object):
                 return
             self.velocity = dir * currentSpeed
             self.speed = currentSpeed
+
+
+    def removeRenderActor(self):
+        ClientBulletSystem.getInstance().destroyEntity(self.clientEntity)
+        self.clientEntity = None
+
+
+    def updateRender(self, dt):
+        if not self.clientEntity:
+            return
+
+        v = self.velocity
+        realPos = self.pos - self.origin + self.visualOffset
+
+        # 速度单位已经是 格/秒，直接 extrapolate，不要再乘 16
+        pos = realPos + v * dt
+        bulletDist = modulo(pos)
+        rot = clientApi.GetRotFromDir(tup(v))
+        entity = self.clientEntity
+        x.setValue(entity, pos.x)
+        y.setValue(entity, pos.y)
+        z.setValue(entity, pos.z)
+        rx.setValue(entity, rot[0])
+        ry.setValue(entity, rot[1])
+        scaleFactor = bulletDist * 0.0025 + 1
+        scale.setValue(entity, bulletDist < 3 and 0 or scaleFactor)
+        self.dFrameTime += dt
 
 
     def bulletHitTest(self, clientBullet, pos, v, dt):
@@ -206,6 +252,7 @@ class BulletBase(object):
 class ClientBulletSystem(ClientSubsystem):
 
     def onInit(self):
+        self.canTick = True
         self.activeBullets = [] # type: list[BulletBase]
         self.idleBullets = [] # type: list[BulletBase]
 
@@ -282,12 +329,18 @@ class ClientBulletSystem(ClientSubsystem):
         self.createBullet(asset, velocityModifier, dir, pos)
 
 
+    def onRender(self, dt):
+        for bullet in self.activeBullets:
+            bullet.updateRender(dt)
+
+
     @Sched.Tick()
     def batchBullets(self):
         inactiveBullets = []
 
         for bullet in self.activeBullets:
             if not bullet.flying:
+                bullet.removeRenderActor()
                 inactiveBullets.append(bullet)
                 continue
             bullet.update(self)

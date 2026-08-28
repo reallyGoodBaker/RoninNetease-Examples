@@ -1,0 +1,29 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "template:bullet",
+            "geometry": {
+                "default": "geometry.template.bullet"
+            },
+            "materials": {
+                "default": "entity_emissive_alpha"
+            },
+            "textures": {
+                "default": "textures/entity/bullet/bullet"
+            },
+            "render_controllers": [
+                "controller.render.no_shadow"
+            ],
+            "animations": {
+                "transform": "animation.client_entity.transform"
+            },
+            "scripts": {
+                "animate": [
+                    "transform"
+                ],
+                "should_update_bones_and_effects_offscreen": true
+            }
+        }
+    }
+}

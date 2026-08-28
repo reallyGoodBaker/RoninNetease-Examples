@@ -1,0 +1,40 @@
+{
+    "format_version": "1.12.0",
+    "animations": {
+        "animation.client_entity.casing": {
+            "loop": true,
+            "bones": {
+                "root": {
+                    "position": [0, 1024, 0]
+                },
+                "casing": {
+                    "rotation": [
+                        "q.target_x_rotation",
+                        "q.target_y_rotation",
+                        0
+                    ]
+                }
+            }
+        },
+        "animation.client_entity.transform": {
+            "loop": true,
+            "bones": {
+                "position": {
+                    "position": [
+                        "q.mod.x * 16",
+                        "(q.mod.y - 100) * 16",
+                        "-q.mod.z * 16"
+                    ]
+                },
+                "rotation": {
+                    "rotation": [
+                        "q.mod.rx",
+                        "q.mod.ry",
+                        0
+                    ],
+                    "scale": "q.mod.scale"
+                }
+            }
+        }
+    }
+}

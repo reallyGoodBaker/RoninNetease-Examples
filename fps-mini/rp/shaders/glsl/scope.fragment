@@ -2,6 +2,7 @@
 // This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
 
 #include "fragmentVersionCentroidUV.h"
+#include "uniformPerFrameConstants.h"
 #include "util.h"
 #include "markConstants.h"
 
@@ -68,17 +69,48 @@ bool isInsetScope() {
 
 void main()
 {
+    float aspect = EXTRA_VECTOR4.x / EXTRA_VECTOR4.y;
+
     vec4 color = texture2D(TEXTURE_0, uv);
     if (!isInsetScope()) {
         gl_FragColor = color;
         return;
     }
 
-    vec2 uvZoomed = (uv - 0.5) / 1.7 + 0.5;
+    // 使用 post_process.json 里配置的 scale / radius / chromaRadius / bendRadius
+    float zoom = max(EXTRA_VECTOR1.x, 1.0);
+    float radius = clamp(EXTRA_VECTOR1.y, 0.05, 1.0);
+    float chromaRadius = clamp(EXTRA_VECTOR1.z, 0.05, 1.0);
+    float bendRadius = clamp(EXTRA_VECTOR1.w, 0.05, 1.0);
+
+    vec2 delta = uv - 0.5;
+    vec2 viewDir = delta * 2.0;
+    viewDir.x *= aspect;
+    float dist = length(viewDir);
+
+    // 保持原来的渐晕/边缘淡出逻辑
+    float factor = 1.0 - smoothstep(radius * 0.5, radius, dist);
+
+    // 色散和弯折各自独立的半径 mask
+    // 色散在圆外：半径内侧没有，半径外侧开始出现
+    float chromaMask = smoothstep(chromaRadius * 0.7, chromaRadius, dist);
+    float bendMask = 1.0 - smoothstep(bendRadius * 0.7, bendRadius, dist);
+
+    // 只有通过 bendMask 的像素才做弯折
+    float bend = 1.0 + 0.6 * bendMask * bendMask;
+    vec2 uvZoomed = 0.5 + delta * (1.0 / zoom) * bend;
     uvZoomed = clamp(uvZoomed, 0.0, 1.0);
 
-    vec4 texColor = texture2D(TEXTURE_0, uvZoomed);
-    vec2 viewDir = (uv - 0.5) * 2.0;
-    float factor = 1 - smoothstep(0.0, 0.5, length(viewDir));
-    gl_FragColor = texColor * factor * factor * 1.2;
+    // 只有通过 chromaMask 的像素才做色散（RGB 通道沿径向分离）
+    vec2 dir = dist > 0.001 ? delta / dist : vec2(0.0);
+    float chromaStrength = 0.02 * chromaMask;
+    vec2 offset = dir * chromaStrength * dist;
+
+    vec3 chromatic;
+    chromatic.r = texture2D(TEXTURE_0, uvZoomed + offset).r;
+    chromatic.g = texture2D(TEXTURE_0, uvZoomed).g;
+    chromatic.b = texture2D(TEXTURE_0, uvZoomed - offset).b;
+
+    vec3 finalColor = chromatic * factor * factor * 1.2;
+    gl_FragColor = vec4(finalColor, 1.0);
 }

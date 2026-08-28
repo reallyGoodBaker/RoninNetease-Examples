@@ -12,11 +12,13 @@ Asset = {
         'disconnector': 'switch',   # 单发杆状态: 'none' 只允许连发, 'enable‘ 只允许单发, 'switch' 允许动态切换连发单发状态, 这个属性对手动枪机无效
         # 手动循环模式相关：
         'shootRestoreTime': 0.3,    # 射击后到可以手拉枪机的时间
+        'cuppedPortOpenBolt': 'fp.bolt_open_cup_port',   # 当膛内有实弹拉开枪机（退膛）时播放的动画
+        'cuppedPortOpenTime': 0.88,    # 当膛内有实弹拉开枪机（退膛）需要的时间
         # 枪机打开/关闭动画
         'boltOpenAnim': 'fp.bolt_open',        # 枪机打开的动画, 当 cyclemode 为 manual 时会影响换弹动画
         'boltCloseAnim': 'fp.bolt_close',       # 枪机关闭的动画, 当 cyclemode 为 manual 时会影响换弹动画
-        'boltOpenTime': 0.45,        # 击发后枪机完全打开的时间
-        'boltCloseTime': 0.45,       # 枪机从完全打开回到关闭的时间
+        'boltOpenTime': 0.35,        # 击发后枪机完全打开的时间
+        'boltCloseTime': 0.5,       # 枪机从完全打开回到关闭的时间
         # 通用属性：
         'holdOpenOnEmpty': False,        # 弹匣打空后是否挂起枪机(空仓挂机)
         # 枪机后座撞击产生的后坐力冲量
@@ -26,6 +28,7 @@ Asset = {
         ],
         'fireSound': 'shoot.bolt',       # 射击音效，空字符串为不播放
         'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
+        'ejectVelocity': (1.5, 3, 0), # 退弹时给子弹附加的速度
     },
 
     # 扳机组件 - 决定开火模式与扳机逻辑
@@ -50,7 +53,7 @@ Asset = {
             {
                 'condition': 'not_full',        # 在子弹没有填满的时候
                 'reloadType': 'add',            # 添加一发, 比如霰弹枪
-                'reloadTime': 0.5,
+                'reloadTime': 0.7,
                 'animation': 'fp.reload_single',
             },
         ]
@@ -90,14 +93,15 @@ Asset = {
         },
         'aim': {     # 基础瞄准功能
             'scale': 2.0,
-            'animation': 'fp.aim',
-            'shootAnim': 'fp.aim_shoot',
-            'boltOpenAnim': 'fp.bolt_open_aim',
-            'boltCloseAnim': 'fp.bolt_close_aim',
+            'camera': 'iron_sight',     # 瞄准时相机名称
+            'modelScale': 0.5,            # 瞄准时z轴缩放
+            'ads': 0.5,
         },
         'movement': {   # 基础移动功能
             'walkAnim': 'fp.hold',
             'sprintAnim': 'fp.run',
+            'draw': '',
+            'holster': '',
         },
     },
 
@@ -105,22 +109,22 @@ Asset = {
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
         {
-            'type': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
+            'category': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
             'attachTo': 'muzzle_01',         # 绑定的骨骼名称
             'offset': (0, 0, 0),             # 绑骨的偏移
             'rotation': (0, 0, 0),           # 绑骨的旋转
             'scale': 1.0                     # 绑骨的缩放
         },
         {
-            'type': 'optic',
+            'category': 'optic',
             'attachTo': 'optic_01',
         },
         {
-            'type': 'magazine',
+            'category': 'magazine',
             'attachTo': 'mag_01',
         },
         {
-            'type': 'underbarrel',
+            'category': 'underbarrel',
             'attachTo': 'underbarrel_01',
         }
     ]

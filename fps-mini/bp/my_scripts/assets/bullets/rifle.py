@@ -30,7 +30,7 @@ Asset = {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
         'damageRetentionPerPass': 0.7,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.7,            # 每次穿透后速度保留比例
-        'minPenetrateSpeed': 380,                   # 最小穿透速度
+        'minPenetrateSpeed': 420,                   # 最小穿透速度
     },
 
     # --- 弹头载荷数组 (命中后按顺序激活的效果) ---
@@ -39,7 +39,7 @@ Asset = {
         # 载荷1: 动能伤害 (几乎必选)
         {
             'type': 'kinetic',                      # 载荷类型
-            'baseDamage': 26,                       # 基础伤害值
+            'baseDamage': 10,                       # 基础伤害值
             'headshotMultiplier': 2.0,              # 爆头伤害倍率
             'damageCurve': 'curves.far'             # 伤害随速度衰减曲线资源ID (asset uri)
         },
@@ -70,7 +70,7 @@ Asset = {
         'hitFX': 'fx_impact_spark'          # 命中特效ID (物理表面)
     },
     'modelAsset': {
-        'bulletEntity': '',                 # 子弹客户端实体 type string
-        'casingEntity': 'casing_556'         # 弹壳模型ID (用于抛壳)
+        'bulletEntity': 'template:bullet_pistol',                 # 子弹客户端实体 type string
+        'casingEntity': 'template:casing_556'         # 弹壳客户端实体 (用于抛壳)
     }
 }

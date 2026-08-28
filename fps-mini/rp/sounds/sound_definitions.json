@@ -12,6 +12,12 @@
             "sounds": [
                 "sounds/bolt_shoot"
             ]
+        },
+        "shoot.auto": {
+            "category": "ambient",
+            "sounds": [
+                "sounds/auto_shoot"
+            ]
         }
     }
 }

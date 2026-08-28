@@ -9,12 +9,7 @@ LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
 
 void main()
 {
-    vec4 color = texture2D(TEXTURE_0, uv);
-    if (color.a <= 0) {
-        gl_FragColor = color;
-        return;
-    }
-
+    // 只要这个材质被渲染，就直接输出标记 alpha；alpha 才是真正起作用的 mark
     float markVal = MARK * float(FPS_SCOPE_MARK);
-    gl_FragColor = vec4(markVal, markVal, markVal, markVal);
+    gl_FragColor = vec4(0.0, 0.0, 0.0, markVal);
 }

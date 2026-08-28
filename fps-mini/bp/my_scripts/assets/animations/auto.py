@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 Asset = {
-    'fp.hold': 'animation.weapons.auto.hold',
-    'fp.run': 'animation.weapons.auto.run',
-    'fp.aim': 'animation.weapons.auto.aim',
+    'fp.hold': 'animation.template.mp18.walk',
+    'fp.run': 'animation.template.mp18.run',
 
-    'fp.shoot': 'animation.weapons.auto.shoot',
-    'fp.aim_shoot': 'animation.weapons.auto.aim_shoot',
-    'fp.reload': 'animation.weapons.auto.reload',
-    'fp.reload_empty': 'animation.weapons.auto.reload_empty',
-    'fp.slideopen': 'animation.weapons.auto.boltopen',
-    'fp.slideclose': 'animation.weapons.auto.boltclose',
+    'fp.shoot': 'animation.template.mp18.shoot',
+    'fp.reload': 'animation.template.mp18.reload',
+    'fp.reload_empty': 'animation.template.mp18.reload2',
+    'fp.slideopen': 'animation.template.mp18.bolt_open',
+    'fp.slideclose': 'animation.template.mp18.bolt_close',
 }

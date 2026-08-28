@@ -23,6 +23,7 @@ Asset = {
         ],
         'fireSound': 'shoot.pistol',            # 射击音效，空字符串为不播放
         'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
+        'ejectVelocity': (1.5, 3, 0), # 退弹时给子弹附加的速度
     },
 
     # 扳机组件 - 决定开火模式与扳机逻辑
@@ -41,13 +42,13 @@ Asset = {
             {
                 'condition': 'empty',           # 在子弹完全空了的时候换弹
                 'reloadType': 'replace',        # 将子弹数替换到 magazineCapacity
-                'reloadTime': 1.25,              # 完全换弹耗时(空仓或战术换弹), replace时为主要耗时
+                'reloadTime': 1.42,              # 完全换弹耗时(空仓或战术换弹), replace时为主要耗时
                 'animation': 'fp.reload',                # 换弹动画
             },
             {
                 'condition': 'not_full',        # 在子弹没有填满的时候
                 'reloadType': 'replace',
-                'reloadTime': 1.25,
+                'reloadTime': 1.42,
                 'animation': 'fp.reload',
             },
         ]
@@ -87,10 +88,13 @@ Asset = {
         },
         'aim': {     # 基础瞄准功能
             'scale': 1.2,
-            'animation': 'fp.aim',
-            'shootAnim': 'fp.aim_shoot',
+            'camera': 'iron_sight',     # 瞄准时相机名称
+            'modelScale': 1,            # 瞄准时z轴缩放
+            'ads': 0.5,
         },
         'movement': {   # 基础移动功能
+            'draw': '',
+            'holster': '',
             'walkAnim': 'fp.hold',
             'sprintAnim': 'fp.run',
         },
@@ -100,22 +104,22 @@ Asset = {
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
         {
-            'type': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
+            'category': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
             'attachTo': 'muzzle_01',         # 绑定的骨骼名称
             'offset': (0, 0, 0),             # 绑骨的偏移
             'rotation': (0, 0, 0),           # 绑骨的旋转
             'scale': 1.0                     # 绑骨的缩放
         },
         {
-            'type': 'optic',
+            'category': 'optic',
             'attachTo': 'optic_01',
         },
         {
-            'type': 'magazine',
+            'category': 'magazine',
             'attachTo': 'mag_01',
         },
         {
-            'type': 'underbarrel',
+            'category': 'underbarrel',
             'attachTo': 'underbarrel_01',
         }
     ]

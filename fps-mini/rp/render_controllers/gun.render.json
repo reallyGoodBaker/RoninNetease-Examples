@@ -2,7 +2,7 @@
     "format_version": "1.12.0",
     "render_controllers": {
         "controller.render.template.weapon": {
-            "geometry": "geometry.weapon",
+            "geometry": "geometry.default",
             "textures": [
                 "texture.weapon"
             ],
@@ -10,28 +10,25 @@
                 {
                     "*": "material.weapon",
                     "glow*": "material.glow",
-                    "scope_inner": "material.scope"
-                }
-            ]
-        },
-        "controller.render.template.arm": {
-            "geometry": "geometry.default",
-            "textures": [
-                "texture.default"
-            ],
-            "materials": [
-                {
-                    "*": "material.default"
+                    "scope_inner": "material.scope",
+                    "eyepiece": "material.eyepiece"
                 }
             ],
             "part_visibility": [
-                { "*": false },
-                { "*Arm": true },
-                { "*Sleeve": true }
-            ]
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*sleeve": false
+                }
+            ],
+            "smooth_normal": false
         },
         "controller.render.fps.arm": {
-            "geometry": "geometry.weapon",
+            "geometry": "geometry.arms",
             "textures": [
                 "texture.default"
             ],
@@ -41,9 +38,27 @@
                 }
             ],
             "part_visibility": [
-                { "*": false },
-                { "*arm": true },
-                { "*sleeve": true }
+                {
+                    "*": false
+                },
+                {
+                    "*arm": true
+                },
+                {
+                    "*sleeve": true
+                }
+            ]
+        },
+        "controller.render.no_shadow": {
+            "filter_lighting": true,
+            "geometry": "geometry.default",
+            "materials": [
+                {
+                    "*": "Material.default"
+                }
+            ],
+            "textures": [
+                "texture.default"
             ]
         }
     }

@@ -4,5 +4,6 @@
 
 bool isMark(vec4 color, int mark) {
     float markColor = mark * MARK;
-    return color.x == markColor && color.y == markColor && color.z == markColor && color.w == markColor;
+    // alpha 才是真正起作用的 mark
+    return color.a == markColor;
 }

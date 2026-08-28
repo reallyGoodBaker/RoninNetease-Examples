@@ -3,6 +3,21 @@
         "version": "1.0.0",
         "scope:entity_alphatest": {
             "fragmentShader": "shaders/glsl/scope_mark.fragment"
+        },
+        "metallic_without_smooth:entity_alphatest": {
+            "fragmentShader": "shaders/glsl/metallic_without_smooth.fragment",
+            "-defines": [
+                "FANCY"
+            ],
+            "+defines": [
+                "RNGL_LOCAL_LIGHT"
+            ]
+        },
+        "eyepiece:entity_alphatest": {
+            "fragmentShader": "shaders/glsl/eyepiece.fragment",
+            "+defines": [
+                "RNGL_LOCAL_LIGHT"
+            ]
         }
     }
 }

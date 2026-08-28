@@ -1,12 +1,25 @@
 from ..engine.architect.compact import (
     ServerSubsystem, SubsystemServer,
     Remote, compServer, LevelServer,
+    EventListener, events,
+    Component, BaseCompServer,
+    getOrCreateComponent,
+    Sched, Query,
 )
 from mod.common.minecraftEnum import AttrType, AttributeModifierOperation, AttributeOperands
+from ..engine.architect.math.double import clamp
+
+
+@Component()
+class HurtCDComp(BaseCompServer):
+    remains = 0
 
 
 @SubsystemServer
 class BulletServerAuthSystem(ServerSubsystem):
+
+    def onReady(self):
+        LevelServer.game.SetHurtCD(0)
 
     @Remote
     def tryBreakBlock(self, playerId, pos):
@@ -19,6 +32,21 @@ class BulletServerAuthSystem(ServerSubsystem):
     def tryDamageEntity(self, playerId, target, damage, caliber):
         hurtComp = compServer.CreateHurt(target)
         hurtComp.Hurt(damage, 'custom', playerId, knocked=False, customTag=caliber)
+
+    @EventListener()
+    def preventDamageInHurtCD(self, ev=events.DamageEvent()):
+        if ev.cause != 'custom':
+            hurt = getOrCreateComponent(ev.entityId, HurtCDComp)
+            if hurt.remains == 0:
+                hurt.remains = 15
+                return
+            ev.setEvent('damage', 0)
+
+    @Sched.Tick()
+    @Query(HurtCDComp)
+    def decreaseHurtCD(self, hurt):
+        # type: (HurtCDComp) -> None
+        hurt.remains = clamp(hurt.remains - 1, 0, 9)
 
     @Remote
     def enablePlayerSprinting(self, playerId, enabled):

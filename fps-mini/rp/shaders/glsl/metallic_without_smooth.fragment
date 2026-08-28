@@ -1,0 +1,74 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as appropriate.
+precision highp float;
+
+#if __VERSION__ < 300
+#extension GL_OES_standard_derivatives : enable
+#endif
+
+#include "fragmentVersionCentroidUV.h"
+#include "uniformPerFrameConstants.h"
+#include "uniformExtraVectorConstants.h"
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+
+// 这些 varying 由网易 entity_alphatest 顶点着色器输出
+varying vec4 light;
+varying vec4 fogColor;
+
+#ifdef RNGL_LOCAL_LIGHT
+varying vec4 worldSpacePos;
+#endif
+
+
+
+void main()
+{
+    vec4 albedo = texture2D(TEXTURE_0, uv);
+    if (albedo.a < 0.5) {
+        discard;
+    }
+
+    // 用屏幕空间导数重建平面法线，强制 flat shading，保持 lowpoly 棱角
+    // 注意：本引擎的 worldSpacePos 是“以相机为原点”的坐标，所以视线方向直接取 -worldSpacePos
+    vec3 V = normalize(-worldSpacePos.xyz);
+    vec3 dpdx = dFdx(worldSpacePos.xyz);
+    vec3 dpdy = dFdy(worldSpacePos.xyz);
+    vec3 N = normalize(cross(dpdx, dpdy));
+    if (dot(N, V) < 0.0) {
+        N = -N;
+    }
+
+    // 中等金属质感，全部硬编码，不开放参数
+    const float metallic = 0.6;
+    const float specStrength = 1.2;
+    const float shininess = 24.0;
+    const float ambient = 0.55;
+    const float lightStrength = 1.0;
+
+    // 使用引擎提供的太阳/月亮方向，白天和晚上光照方向、亮度都会跟着变
+    vec3 L = normalize(SUN_DIR.xyz);
+    vec3 H = normalize(L + V);
+    float sunFactor = mix(0.55, 1.0, SUN_DIR.w);
+
+    float ndl = clamp(dot(N, L), 0.0, 1.0);
+    float ndh = clamp(dot(N, H), 0.0, 1.0);
+
+    float diffuse = (ambient + lightStrength * ndl) * sunFactor;
+    float spec = pow(ndh, shininess) * specStrength * sunFactor;
+
+    // 金属反射颜色用 albedo 染色
+    vec3 specColor = mix(vec3(0.04), albedo.rgb, metallic);
+
+    // 中等金属：压低一点漫反射，但保留足够亮度
+    // 用引擎 light.rgb 做主光照，白天亮、晚上暗，同时给一个下限避免死黑
+    vec3 engineLight = clamp(light.rgb, vec3(0.4), vec3(1.3));
+    vec3 color = albedo.rgb * diffuse * engineLight * (1.0 - metallic * 0.3);
+    color += specColor * spec * (0.6 + 0.4 * ndl) * engineLight;
+    color += albedo.rgb * 0.12;
+
+    // 沿用原版实体的雾
+    color = mix(color, fogColor.rgb, fogColor.a);
+
+    gl_FragColor = vec4(color, albedo.a);
+}
