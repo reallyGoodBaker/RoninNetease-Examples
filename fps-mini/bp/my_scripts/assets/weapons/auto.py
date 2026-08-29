@@ -23,7 +23,7 @@ Asset = {
         ],
         'fireSound': 'shoot.auto',            # 射击音效，空字符串为不播放
         'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
-        'ejectVelocity': (1, 2, 0), # 退弹时给子弹附加的速度
+        'ejectVelocity': (2, 2.5, 0), # 退弹时给子弹附加的速度
     },
 
     # 扳机组件 - 决定开火模式与扳机逻辑
@@ -95,6 +95,8 @@ Asset = {
         'movement': {   # 基础移动功能
             'walkAnim': 'fp.hold',
             'sprintAnim': 'fp.run',
+            'draw': 'fp.draw',
+            'holster': 'fp.holster',
         },
     },
 

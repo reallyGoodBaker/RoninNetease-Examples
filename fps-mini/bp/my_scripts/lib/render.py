@@ -156,7 +156,8 @@ class WeaponRenderSystem(ClientSubsystem):
 
     @EventListener()
     def onChangeCarriedItem(self, _=events.OnCarriedNewItemChangedClientEvent()):
-        self.initPlayerRender(localPlayerId())
+        # Render resource change is driven by ShooterSystem after holster animation.
+        pass
 
 
     @CustomEvent('syncResource')

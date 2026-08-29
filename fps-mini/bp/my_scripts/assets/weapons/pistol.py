@@ -93,8 +93,8 @@ Asset = {
             'ads': 0.5,
         },
         'movement': {   # 基础移动功能
-            'draw': '',
-            'holster': '',
+            'draw': 'fp.draw',
+            'holster': 'fp.holster',
             'walkAnim': 'fp.hold',
             'sprintAnim': 'fp.run',
         },

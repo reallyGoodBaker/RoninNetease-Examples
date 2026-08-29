@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 AnimMeta = {
     "animation.template.mp18.walk": {
-        "loop": True,
+        "loop": "hold_on_last_frame",
         "length": -1
     },
     "animation.template.mp18.run": {
-        "loop": True,
+        "loop": "hold_on_last_frame",
         "length": -1
     },
     "animation.template.mp18.shoot": {
@@ -27,6 +27,14 @@ AnimMeta = {
     "animation.template.mp18.reload2": {
         "loop": "hold_on_last_frame",
         "length": 2.4583
+    },
+    "animation.template.mp18.draw": {
+        "loop": "hold_on_last_frame",
+        "length": 0.4375
+    },
+    "animation.template.mp18.holster": {
+        "loop": "hold_on_last_frame",
+        "length": 0.2917
     },
     "animation.weapons.bolt.fp.shoot": {
         "loop": "hold_on_last_frame",
@@ -61,7 +69,7 @@ AnimMeta = {
         "length": 0.5
     },
     "animation.weapons.bolt.fp.holster": {
-        "loop": False,
+        "loop": "hold_on_last_frame",
         "length": 0.375
     },
     "animation.weapons.bolt.fp.walk": {
@@ -91,5 +99,13 @@ AnimMeta = {
     "animation.template.pistol.slideclose": {
         "loop": "hold_on_last_frame",
         "length": 0.0417
+    },
+    "animation.template.pistol.draw": {
+        "loop": "hold_on_last_frame",
+        "length": 0.25
+    },
+    "animation.template.pistol.holster": {
+        "loop": "hold_on_last_frame",
+        "length": 0.1875
     }
 }

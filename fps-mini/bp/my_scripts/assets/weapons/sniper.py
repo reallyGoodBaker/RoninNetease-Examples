@@ -44,13 +44,14 @@ Asset = {
         'ammoType': [ 'bullets.fullpower' ],     # 兼容的弹药Asset列表
         'reloadModes': [
             {
-                'condition': 'not_full',        # 在子弹没有填满的时候
-                'reloadType': 'add',            # 添加一发, 比如霰弹枪
-                'reloadTime': 0.7,
-                'animation': 'fp.reload_single',
+                'condition': 'clip_available',  # 在子弹可以分多漏夹装弹时
+                'countPerClip': 5,              # 每个漏夹装填的数量
+                'reloadType': 'add_clip',       # 将子弹数按每次 countPerClip 的数量分多次添加
+                'reloadTime': 1.5,
+                'animation': 'fp.reload_clip',
             },
             {
-                'condition': 'empty',        # 在子弹没有填满的时候
+                'condition': 'not_full',        # 在子弹没有填满的时候
                 'reloadType': 'add',            # 添加一发, 比如霰弹枪
                 'reloadTime': 0.7,
                 'animation': 'fp.reload_single',
@@ -105,8 +106,8 @@ Asset = {
         'movement': {   # 基础移动功能
             'walkAnim': 'fp.hold',
             'sprintAnim': 'fp.run',
-            'draw': '',
-            'holster': '',
+            'draw': 'fp.draw',
+            'holster': 'fp.holster',
         },
     },
 

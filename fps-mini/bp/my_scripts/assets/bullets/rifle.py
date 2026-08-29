@@ -71,6 +71,6 @@ Asset = {
     },
     'modelAsset': {
         'bulletEntity': 'template:bullet_pistol',                 # 子弹客户端实体 type string
-        'casingEntity': 'template:casing_556'         # 弹壳客户端实体 (用于抛壳)
+        'casingEntity': 'template:casing2'         # 弹壳客户端实体 (用于抛壳)
     }
 }

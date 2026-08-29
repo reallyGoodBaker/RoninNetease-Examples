@@ -9,4 +9,7 @@ Asset = {
     'fp.reload_clip': "animation.weapons.bolt.fp.reload_clip",
     'fp.reload_single': "animation.weapons.bolt.fp.reload_single",
     'fp.bolt_open_cup_port': 'animation.weapons.bolt.fp.bolt_open_cup_port',
+
+    'fp.draw': 'animation.weapons.bolt.fp.draw',
+    'fp.holster': 'animation.weapons.bolt.fp.holster',
 }
