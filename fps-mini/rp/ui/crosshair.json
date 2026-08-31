@@ -1,0 +1,19 @@
+{
+    "main": {
+        "type": "screen",
+        "controls": [
+            {
+                "cross": {
+                    "type": "image",
+                    "size": [
+                        16,
+                        16
+                    ],
+                    "texture": "textures/ui/cross",
+                    "layer": 2
+                }
+            }
+        ]
+    },
+    "namespace": "crosshair"
+}

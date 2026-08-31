@@ -20,7 +20,7 @@ WeaponMapping = {
 
 
 @SubsystemClient
-class PlayerInitSystem(ClientSubsystem):
+class PlayerShooterInitSystem(ClientSubsystem):
 
     isMainhandAny = False
 
@@ -37,10 +37,11 @@ class PlayerInitSystem(ClientSubsystem):
         if not itemDict:
             self.isMainhandAny = False
             self.shooter.changeWeapon(None)
-            return
-        asset = WeaponMapping.get(itemDict['newItemName'])
-        self.shooter.changeWeapon(asset)
-        self.isMainhandAny = bool(asset)
+        else:
+            asset = WeaponMapping.get(itemDict['newItemName'])
+            self.shooter.changeWeapon(asset)
+            self.isMainhandAny = bool(asset)
+        self.shooter.shooterVfx.setCrosshairVisible(self.isMainhandAny)
 
 
     @EventListener()

@@ -1,0 +1,200 @@
+{
+    "main": {
+        "type": "screen", 
+        "controls": [
+            {
+                "kill": {
+                    "layer": 2, 
+                    "offset": [
+                        0.0, 
+                        0.0
+                    ], 
+                    "type": "panel", 
+                    "controls": [
+                        {
+                            "tr": {
+                                "anchor_from": "top_right", 
+                                "layer": 1, 
+                                "anchor_to": "bottom_left", 
+                                "uv": [
+                                    64.0, 
+                                    0.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "tl": {
+                                "anchor_from": "top_left", 
+                                "layer": 1, 
+                                "anchor_to": "bottom_right", 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "br": {
+                                "anchor_from": "bottom_right", 
+                                "layer": 1, 
+                                "anchor_to": "top_left", 
+                                "uv": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "bl": {
+                                "anchor_from": "bottom_left", 
+                                "layer": 1, 
+                                "anchor_to": "top_right", 
+                                "uv": [
+                                    0.0, 
+                                    64.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }
+                    ], 
+                    "size": [
+                        8.0, 
+                        8.0
+                    ]
+                }
+            }, 
+            {
+                "hit": {
+                    "layer": 1, 
+                    "offset": [
+                        0.0, 
+                        0.0
+                    ], 
+                    "type": "panel", 
+                    "controls": [
+                        {
+                            "tr": {
+                                "anchor_from": "top_right", 
+                                "layer": 1, 
+                                "anchor_to": "bottom_left", 
+                                "uv": [
+                                    64.0, 
+                                    0.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "tl": {
+                                "anchor_from": "top_left", 
+                                "layer": 1, 
+                                "anchor_to": "bottom_right", 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "br": {
+                                "anchor_from": "bottom_right", 
+                                "layer": 1, 
+                                "anchor_to": "top_left", 
+                                "uv": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }, 
+                        {
+                            "bl": {
+                                "anchor_from": "bottom_left", 
+                                "layer": 1, 
+                                "anchor_to": "top_right", 
+                                "uv": [
+                                    0.0, 
+                                    64.0
+                                ], 
+                                "texture": "textures/ui/hit", 
+                                "uv_size": [
+                                    64.0, 
+                                    64.0
+                                ], 
+                                "type": "image", 
+                                "size": [
+                                    12, 
+                                    12
+                                ]
+                            }
+                        }
+                    ], 
+                    "size": [
+                        8.0, 
+                        8.0
+                    ]
+                }
+            }
+        ]
+    }, 
+    "namespace": "shooter_indicator"
+}

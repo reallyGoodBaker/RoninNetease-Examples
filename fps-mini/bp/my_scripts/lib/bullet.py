@@ -304,7 +304,7 @@ class ClientBulletSystem(ClientSubsystem):
             addTimer(1, lambda: shape.Remove(), False)
             self.level.textNotify.SetLeftCornerNotify('{} {}'.format(damage, caliber))
         remote.client.call(
-            'BulletServerAuthSystem.tryDamageEntity', target, damage, caliber
+            'BulletServerAuthSystem.tryDamageEntity', target, damage, isHeadShot, caliber
         )
 
 

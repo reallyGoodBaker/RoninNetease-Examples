@@ -90,7 +90,7 @@ Asset = {
             'scale': 1.5,
             'camera': 'iron_sight',     # 瞄准时相机名称
             'modelScale': 0.7,            # 瞄准时z轴缩放
-            'ads': 0.5,
+            'ads': 0.2,
         },
         'movement': {   # 基础移动功能
             'walkAnim': 'fp.hold',

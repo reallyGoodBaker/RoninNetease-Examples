@@ -5,8 +5,7 @@
 			"loop": "hold_on_last_frame",
 			"bones": {
                 "fpsroot": {
-					"rotation": [0, "q.mod.is_first_person ? 180 : 0", 0],
-                    "position": [0, "v.smoothvspeed = math.lerp(v.smoothvspeed ?? 0, math.clamp(q.vertical_speed, -3, 3), 0.1); v.smoothvspeed2 = math.lerp(v.smoothvspeed2 ?? 0, math.clamp(v.smoothvspeed, -3, 3), 0.05); v.smoothvspeed3 = math.lerp(v.smoothvspeed3 ?? 0, math.clamp(v.smoothvspeed2, -3, 3), 0.05); return v.smoothvspeed3 * -0.3 * q.mod.shake_scale;", 0]
+					"rotation": [0, "q.mod.is_first_person ? 180 : 0", 0]
 				},
                 "control": {
                     "rotation": [

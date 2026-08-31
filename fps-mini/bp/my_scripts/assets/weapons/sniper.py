@@ -95,7 +95,7 @@ Asset = {
             'scale': 2.0,
             'camera': 'tele_sight',     # 瞄准时相机名称
             'modelScale': 0.4,                 # 瞄准时z轴缩放
-            'ads': 1.5,
+            'ads': 0.5,
             'scope_effect': {           # 先调好再写到设置里
                 'scale': 3.872,         # 瞄准镜放大倍率
                 'vignette': 0.257,      # 暗角

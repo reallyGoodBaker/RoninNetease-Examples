@@ -9,10 +9,11 @@ from ..engine.architect.compact import (
     Query, NeC, EntityId,
     getBonePosition, createComponent,
     tup, add, mul, vec, clientApi,
-    lerp as lerpv, epsilon
+    lerp as lerpv, epsilon, modulo,
+    UiSubsystem, UiDef, AutoCreate, Hud,
 )
 from ..engine.architect.math.double import alerp, lerp, clamp, random
-from ..engine.architect.math.utils import worldToViewDirection, worldToViewPoint, viewToWorld
+from ..engine.architect.math.utils import worldToViewDirection, worldToViewPoint, viewToWorld, screenSize
 from ..engine.architect.math.mat4 import Matrix, decompose
 
 # TODO: Remove these imports
@@ -42,6 +43,68 @@ vSpeed = QueryVariable('v_speed')
 modelScale = QueryVariable('model_scale', 1)
 
 
+@AutoCreate
+@UiDef('crosshair.main')
+@Hud
+class CrosshairHud(UiSubsystem):
+
+    BASE_SIZE = 16
+
+    def onCreate(self):
+        self.cross = self.find('/cross').asImage()
+        screenWidth, screenHeight = screenSize()
+        self.center = (screenWidth / 2.0, screenHeight / 2.0)
+        self._lastScreenSize = (screenWidth, screenHeight)
+        self._spread = 0
+        self._applySpread()
+        self.setVisible(False)
+        self.canTick = True
+
+    def setSpread(self, spread):
+        # type: (float) -> None
+        self._spread = max(0.0, spread)
+        self._applySpread()
+
+    def getSpread(self):
+        # type: () -> float
+        return self._spread
+
+    def setColor(self, color):
+        # type: (tuple) -> None
+        self.cross.SetSpriteColor(color)
+
+    def setAlpha(self, alpha):
+        # type: (float) -> None
+        """
+        设置准星透明度，由 vfx 驱动。
+        """
+        self.cross.SetAlpha(max(0.0, min(1.0, alpha)))
+
+    def setVisible(self, visible):
+        # type: (bool) -> None
+        self.cross.SetVisible(visible)
+
+    def setCenter(self, x, y):
+        # type: (float, float) -> None
+        self.center = (x, y)
+        self._applySpread()
+
+    def _applySpread(self):
+        size = self.BASE_SIZE + self._spread
+        half = size / 2.0
+        self.cross.SetSize((size, size))
+        self.cross.SetPosition((self.center[0] - half, self.center[1] - half))
+
+    def onRender(self, dt):
+        if not hasattr(self, '_lastScreenSize'):
+            return
+        sw, sh = screenSize()
+        if self._lastScreenSize != (sw, sh):
+            self._lastScreenSize = (sw, sh)
+            self.center = (sw / 2.0, sh / 2.0)
+            self._applySpread()
+
+
 @Component()
 class CaseMovement(BaseCompClient):
     angulerVelocity = (0, 0)
@@ -54,6 +117,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
 
     aimingTransitionDuration = 0.0
     aimingTotalTime = epsilon
+    _crosshairAlpha = 1.0
+    _crosshairVisible = False
 
     def onInit(self):
         self.canTick = True
@@ -144,18 +209,44 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.handleRotFromCameraAnim(dt)
         self.cam.SetCameraRotation(self.camRot)
         self.handleModelZScale()
+        self.handleCrosshairAlpha()
 
     def handleModelZScale(self):
+        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        alpha = 1.0 - math.exp(-self.dt / tau)
         modelScale.setValue(self.localId, lerp(
             modelScale.getValue(self.localId),
             self.modelZScale,
-            clamp(self.aimingTransitionDuration / self.aimingTotalTime, 0, 1),
+            alpha,
         ))
 
+    def handleCrosshairAlpha(self):
+        # vfx 驱动 crosshair 透明度，和瞄准状态耦合
+        targetAlpha = 0.0 if self.isAiming else 0.7
+        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        alphaFactor = 1.0 - math.exp(-self.dt / tau)
+        self._crosshairAlpha += (targetAlpha - self._crosshairAlpha) * alphaFactor
+        crosshair = CrosshairHud.getInstance()
+        if crosshair is not None:
+            # 只有手持模组武器时才显示；原版物品不显示
+            crosshair.setVisible(self._crosshairVisible)
+            crosshair.setAlpha(self._crosshairAlpha)
+
+    def setCrosshairVisible(self, visible):
+        # type: (bool) -> None
+        self._crosshairVisible = bool(visible)
+        crosshair = CrosshairHud.getInstance()
+        if crosshair is not None:
+            crosshair.setVisible(self._crosshairVisible)
+
     def fadeToCamera(self, dt):
-        t = clamp(self.aimingTransitionDuration / self.aimingTotalTime, 0, 1)
-        self.aimingTransitionDuration += dt
         globalOffset = getBonePosition(self.localId, self.cameraAligned) - vec(self.cam.GetPosition())
+        # 骨骼还没绑好时偶尔会返回巨大坐标，这一帧直接跳过，避免模型乱飞
+        if modulo(globalOffset) > 16:
+            return
+        self.aimingTransitionDuration += dt
+        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        alpha = 1.0 - math.exp(-dt / tau)
         offset = worldToViewDirection(globalOffset, self.cam.GetForward(), (0.0, 1.0, 0.0))
         controlPos.setValue(self.localId, lerpv(
             controlPos.getValue(self.localId),
@@ -164,7 +255,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
                 -offset.y * PLAYER_SCALE,
                 -offset.z * PLAYER_SCALE * self.modelZScale
             )),
-            t,
+            alpha,
         ))
 
     def handleRotFromCameraAnim(self, dt):

@@ -8,6 +8,22 @@
                 "createTime": 1782887182.3859386,
                 "modifyTime": 1782887182.3859386
             },
+            "1_template:bullet": {
+                "createTime": 1787988634.3779404,
+                "modifyTime": 1787988634.3779404
+            },
+            "1_template:bullet_pistol": {
+                "createTime": 1787988634.3779404,
+                "modifyTime": 1787988634.3779404
+            },
+            "1_template:casing2": {
+                "createTime": 1787988634.3779404,
+                "modifyTime": 1787988634.3779404
+            },
+            "1_template:casing_762": {
+                "createTime": 1787988634.3779404,
+                "modifyTime": 1787988634.3779404
+            },
             "2_roninexample:auto": {
                 "createTime": 1784754433.627947,
                 "modifyTime": 1787180858.1234775
@@ -19,6 +35,10 @@
             "2_roninexample:pistol": {
                 "createTime": 1782887223.437402,
                 "modifyTime": 1784224368.4373336
+            },
+            "2_roninexample:sniper": {
+                "createTime": 1787988634.3779404,
+                "modifyTime": 1787988634.3779404
             },
             "32768_sound_definitions": {
                 "createTime": 1784224282.61727,
@@ -41,6 +61,9 @@
             "prefab": {},
             "screen": {
                 "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\ammo.json": [
+                    "/main"
+                ],
+                "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\shooter_indicator.json": [
                     "/main"
                 ]
             }

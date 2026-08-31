@@ -15,9 +15,11 @@ MOD_SERVER_MODULES = [
 MOD_CLIENT_MODULES = [
     'assets.notifies.reload',
 
-    'systems.playerInit'
+    'systems.playerInit',
 ]
 
 PLUGINS = [
     '$vendor.animation',
+
+    '$user.default_indicator',
 ]
