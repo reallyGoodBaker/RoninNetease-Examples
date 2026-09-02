@@ -34,13 +34,16 @@ class PlayerShooterInitSystem(ClientSubsystem):
 
 
     def changeWeapon(self, itemDict=None):
+        cam = compClient.CreateCamera(localPlayerId())
         if not itemDict:
             self.isMainhandAny = False
             self.shooter.changeWeapon(None)
+            cam.SetCameraOffset((0, 0, 0))
         else:
             asset = WeaponMapping.get(itemDict['newItemName'])
             self.shooter.changeWeapon(asset)
             self.isMainhandAny = bool(asset)
+            cam.SetCameraOffset((0.8, 0, -1.5))
         self.shooter.shooterVfx.setCrosshairVisible(self.isMainhandAny)
 
 

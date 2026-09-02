@@ -8,6 +8,9 @@ from ..engine.architect.compact import (
     getBonePosition,
 )
 
+from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
+from ..assets.animMeta import AnimMeta
+
 # TODO: Remove these imports
 from mod.client.component.actorRenderCompClient import ActorRenderCompClient
 
@@ -62,13 +65,16 @@ def applyRenderResource(renderer, asset, renderParams):
     setNativeRenderControllerEnabled(renderer, False)
     setNativeRootAnimationEnabled(renderer, False)
 
-    # 网易的bug，如果不删除某个组并重新添加，它会导致某个组的粒子绑定出问题
-    renderer.AddPlayerGeometry('default', 'geometry.humanoid.custom')
-    renderer.RebuildPlayerRender()
-
     if not renderParams.geometry:
         renderParams.geometry = findResource(renderParams.entityId, renderer, 'geometry', 'default')
+        renderer.AddPlayerGeometry('player', renderParams.geometry)
+
+    # 网易的bug，如果不删除某个组并重新添加，它会导致某个组的粒子绑定出问题
+    renderer.AddPlayerGeometry('default', renderParams.geometry)
+    renderer.RebuildPlayerRender()
+
     renderer.AddPlayerGeometry('default', asset['model'])
+    renderer.AddPlayerGeometry('third_model', asset['third_model'])
     renderer.AddPlayerGeometry('arms', asset['arms'])
     for k, v in asset['materials'].items():
         renderer.AddPlayerRenderMaterial(k, v)
@@ -82,8 +88,12 @@ def applyRenderResource(renderer, asset, renderParams):
     for renderController in third:
         renderer.AddPlayerRenderController(renderController, TP_COND)
 
-    renderer.AddPlayerAnimation('custom_root', 'animation.template.weapons.fp.rot')
-    renderer.AddPlayerScriptAnimate('custom_root', autoReplace=True)
+    renderer.AddPlayerAnimation('custom.base', 'animation.custom.weapons.root')
+    renderer.AddPlayerAnimation('custom.walk', 'animation.custom.humanoid.walk')
+    renderer.AddPlayerAnimation('custom.riding', 'animation.custom.humanoid.riding')
+    renderer.AddPlayerAnimationController('custom.root', 'controller.animation.custom_root')
+    renderer.AddPlayerScriptAnimate('custom.root', autoReplace=True)
+
     renderer.RebuildPlayerRender()
 
 
@@ -91,8 +101,9 @@ def resetRenderResource(renderer, renderParams):
     # type: (ActorRenderCompClient, LocalPlayerRenderParams) -> None
     if not renderParams.geometry:
         renderer.AddPlayerGeometry('default', 'geometry.humanoid.custom')
-    renderer.AddPlayerGeometry('default', renderParams.geometry)
-    renderer.AddPlayerScriptAnimate('custom_root', '0', True)
+    else:
+        renderer.AddPlayerGeometry('default', renderParams.geometry)
+    renderer.AddPlayerScriptAnimate('custom.root', '0', True)
     for renderController in renderParams.first:
         renderer.RemovePlayerRenderController(renderController)
     for renderController in renderParams.third:
@@ -102,6 +113,27 @@ def resetRenderResource(renderer, renderParams):
     setNativeRootAnimationEnabled(renderer)
 
     renderer.RebuildPlayerRender()
+
+
+
+
+def registerWeaponAnimations(entityId, weaponName):
+    # type: (str, str) -> None
+    animEx = getOrCreateComponent(entityId, AnimationExComponent)
+    animEx.registerMetadatas(AnimMeta)
+    animEx.clearRegisteredAnimations()
+    animEx.registerAnimations(Asset('animations.' + weaponName).load(True))
+    for name, easingDef in Asset('easings.' + weaponName).load(True).items():
+        animEx.registerEasing(name, easingDef)
+    animEx.updateActorAnimDef()
+
+
+def clearWeaponAnimations(entityId):
+    # type: (str) -> None
+    animEx = getOneComponent(entityId, AnimationExComponent)
+    if animEx:
+        animEx.clearRegisteredAnimations()
+        animEx.updateActorAnimDef()
 
 
 @SubsystemClient
@@ -132,6 +164,8 @@ class WeaponRenderSystem(ClientSubsystem):
     def changeRenderResource(self, entity, assetUri):
         renderer = compClient.CreateActorRender(entity)
         if not assetUri:
+            if entity != localPlayerId():
+                clearWeaponAnimations(entity)
             renderParams = getOneComponent(entity, LocalPlayerRenderParams)
             if not renderParams:
                 return
@@ -144,6 +178,8 @@ class WeaponRenderSystem(ClientSubsystem):
             Asset('renderResources.' + assetUri).load(True),
             getOrCreateComponent(entity, LocalPlayerRenderParams)
         )
+        if entity != localPlayerId():
+            registerWeaponAnimations(entity, assetUri)
         # 网易bug，切换模型后需要手动绑定一次粒子，
         # 不然之后第一次获取得到的结果一定是错的
         getBonePosition(entity, 'muzzle')

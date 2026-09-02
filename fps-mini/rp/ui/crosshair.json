@@ -4,13 +4,98 @@
         "controls": [
             {
                 "cross": {
-                    "type": "image",
+                    "type": "panel",
                     "size": [
-                        16,
-                        16
+                        0.0,
+                        0.0
                     ],
-                    "texture": "textures/ui/cross",
-                    "layer": 2
+                    "layer": 1,
+                    "controls": [
+                        {
+                            "bottom": {
+                                "type": "image",
+                                "anchor_from": "bottom_middle",
+                                "anchor_to": "top_middle",
+                                "size": [
+                                    8,
+                                    8
+                                ],
+                                "layer": 2,
+                                "texture": "textures/ui/cross",
+                                "uv": [
+                                    14.0,
+                                    18.0
+                                ],
+                                "uv_size": [
+                                    4.0,
+                                    14.0
+                                ]
+                            }
+                        },
+                        {
+                            "right": {
+                                "type": "image",
+                                "anchor_from": "right_middle",
+                                "anchor_to": "left_middle",
+                                "size": [
+                                    8,
+                                    8
+                                ],
+                                "layer": 2,
+                                "texture": "textures/ui/cross",
+                                "uv": [
+                                    18.0,
+                                    14.0
+                                ],
+                                "uv_size": [
+                                    14.0,
+                                    4.0
+                                ]
+                            }
+                        },
+                        {
+                            "top": {
+                                "type": "image",
+                                "anchor_from": "top_middle",
+                                "anchor_to": "bottom_middle",
+                                "size": [
+                                    8,
+                                    8
+                                ],
+                                "layer": 2,
+                                "texture": "textures/ui/cross",
+                                "uv": [
+                                    14.0,
+                                    0.0
+                                ],
+                                "uv_size": [
+                                    4.0,
+                                    14.0
+                                ]
+                            }
+                        },
+                        {
+                            "left": {
+                                "type": "image",
+                                "anchor_from": "left_middle",
+                                "anchor_to": "right_middle",
+                                "size": [
+                                    8,
+                                    8
+                                ],
+                                "layer": 2,
+                                "texture": "textures/ui/cross",
+                                "uv": [
+                                    0.0,
+                                    14.0
+                                ],
+                                "uv_size": [
+                                    14.0,
+                                    4.0
+                                ]
+                            }
+                        }
+                    ]
                 }
             }
         ]

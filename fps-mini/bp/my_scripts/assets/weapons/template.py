@@ -21,11 +21,19 @@ Asset = {
         # 枪机打开/关闭动画
         'boltOpenAnim': '',         # 枪机打开的动画, 当 cyclemode 为 manual 时会影响换弹动画
         'boltCloseAnim': '',        # 枪机关闭的动画, 当 cyclemode 为 manual 时会影响换弹动画
-        # 枪机后座撞击产生的后坐力冲量
-        'recoil': [
-            0.3,                    # 水平方向随机范围 [-x, x]
-            0.8                     # 垂直方向基础值 [0, y]
-        ],
+        # 枪机后座
+        'recoil': {
+            'value': [0.3, 0.5],    # 每次射击叠加的后坐力 (水平, 竖直)
+            'decay': [0.2, 0.3],    # 每刻恢复的后坐力 (水平, 竖直)
+        },
+        # 枪机散布
+        'spread': {
+            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
+            'strength': 0.3,        # 枪机散布的强度 (这是非线性的，建议多调试)
+            'decay': 2,             # 每刻枪机恢复强度，值越大恢复越快 (大于1)
+            'maxSpread': 1.5,
+            'minSpread': 0.2,
+        },
         'fireSound': '',            # 射击音效，空字符串为不播放
         'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         'ejectVelocity': (1, 2, 0), # 退弹时给子弹附加的速度
@@ -82,7 +90,6 @@ Asset = {
         'adsInTime': 0.25,          # 进入开镜的时间
         'adsOutTime': 0.25,         # 退出开镜的时间
         'sprintToFireTime': 0.2,    # 跑射延迟
-        'recoilLevel': 1,           # 后坐力等级，影响视觉效果
     },
 
     # 更多 - 可以自定义处理
@@ -111,6 +118,7 @@ Asset = {
             'sprintAnim': '',
             'draw': 'fp.draw',
             'holster': 'fp.holster',
+            'spread': 1,
         },
     },
 

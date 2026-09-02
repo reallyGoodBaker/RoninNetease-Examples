@@ -66,7 +66,7 @@ AnimMeta = {
     },
     "animation.weapons.bolt.fp.draw": {
         "loop": "hold_on_last_frame",
-        "length": 0.5
+        "length": 0.6667
     },
     "animation.weapons.bolt.fp.holster": {
         "loop": "hold_on_last_frame",

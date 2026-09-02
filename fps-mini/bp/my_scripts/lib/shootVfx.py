@@ -1,7 +1,6 @@
 from ..engine.architect.compact import (
     ClientSubsystem, SubsystemClient,
     LevelClient, QueryVariable, localPlayerId, QVector3,
-    addTimer,
     EventListener, events,
     compClient,
     Component, BaseCompClient,
@@ -19,18 +18,16 @@ from ..engine.architect.math.mat4 import Matrix, decompose
 # TODO: Remove these imports
 from mod.client.component.posCompClient import PosComponentClient
 from mod.client.component.rotCompClient import RotComponentClient
+from mod.client.ui.controls.baseUIControl import BaseUIControl
 
 import math
+import random as rand
 
 FULL_ANGLE = 360
 
 # 玩家 client_entity scripts.scale，用于世界坐标 -> 模型单位的换算
 PLAYER_SCALE = 16 / 0.9375
 
-
-# 调试开关：True 时会把 EXTRA_VECTOR1.w 设为 999，
-# 让 shader 全屏显示传入的 vec4，用来确认数据是否真的传进去了。
-DEBUG_MUZZLE_VECTOR = False
 
 yRot = QueryVariable('y_rot')
 xRot = QueryVariable('x_rot')
@@ -43,66 +40,75 @@ vSpeed = QueryVariable('v_speed')
 modelScale = QueryVariable('model_scale', 1)
 
 
+class CrosshairController(object):
+
+    def __init__(self, panel, size):
+        # type: (BaseUIControl, float) -> None
+        self.panel = panel
+        self.size = size
+        self.top = panel.GetChildByName('top').asImage()
+        self.left = panel.GetChildByName('left').asImage()
+        self.bottom = panel.GetChildByName('bottom').asImage()
+        self.right = panel.GetChildByName('right').asImage()
+        self.images = (self.top, self.right, self.bottom, self.left)
+        self.setOffset()
+
+    def _applyFunc(self, fn):
+        for img in self.images:
+            fn(img)
+
+    def setAlpha(self, alpha):
+        self._applyFunc(lambda img: img.SetAlpha(alpha))
+
+    def setVisible(self, visible):
+        self._applyFunc(lambda img: img.SetVisible(visible))
+
+    def setColor(self, color):
+        self._applyFunc(lambda img: img.SetSpriteColor(color))
+
+    def setOffset(self, offset=0):
+        size = self.size
+        visualSpread = offset + 2
+        halfSize = size / 2
+        self.top.SetPosition((-halfSize, -visualSpread - size))
+        self.bottom.SetPosition((-halfSize, visualSpread))
+        self.left.SetPosition((-size - visualSpread, -halfSize))
+        self.right.SetPosition((visualSpread, -halfSize))
+
+
 @AutoCreate
 @UiDef('crosshair.main')
 @Hud
 class CrosshairHud(UiSubsystem):
 
-    BASE_SIZE = 16
+    BASE_SIZE = 8
 
     def onCreate(self):
-        self.cross = self.find('/cross').asImage()
-        screenWidth, screenHeight = screenSize()
-        self.center = (screenWidth / 2.0, screenHeight / 2.0)
-        self._lastScreenSize = (screenWidth, screenHeight)
-        self._spread = 0
-        self._applySpread()
-        self.setVisible(False)
+        self.cross = self.find('/cross')
+        self.controller = CrosshairController(self.cross, self.BASE_SIZE)
         self.canTick = True
+        self.offset = 0
+        self.visualOffset = 0
 
-    def setSpread(self, spread):
+    def setOffset(self, offset):
         # type: (float) -> None
-        self._spread = max(0.0, spread)
-        self._applySpread()
-
-    def getSpread(self):
-        # type: () -> float
-        return self._spread
-
-    def setColor(self, color):
-        # type: (tuple) -> None
-        self.cross.SetSpriteColor(color)
+        self.offset = offset
 
     def setAlpha(self, alpha):
         # type: (float) -> None
         """
         设置准星透明度，由 vfx 驱动。
         """
-        self.cross.SetAlpha(max(0.0, min(1.0, alpha)))
+        self.controller.setAlpha(max(0.0, min(1.0, alpha)))
 
     def setVisible(self, visible):
         # type: (bool) -> None
-        self.cross.SetVisible(visible)
-
-    def setCenter(self, x, y):
-        # type: (float, float) -> None
-        self.center = (x, y)
-        self._applySpread()
-
-    def _applySpread(self):
-        size = self.BASE_SIZE + self._spread
-        half = size / 2.0
-        self.cross.SetSize((size, size))
-        self.cross.SetPosition((self.center[0] - half, self.center[1] - half))
+        self.controller.setVisible(visible)
 
     def onRender(self, dt):
-        if not hasattr(self, '_lastScreenSize'):
-            return
-        sw, sh = screenSize()
-        if self._lastScreenSize != (sw, sh):
-            self._lastScreenSize = (sw, sh)
-            self.center = (sw / 2.0, sh / 2.0)
-            self._applySpread()
+        t = 1 - math.exp(-20 * dt)
+        self.visualOffset = lerp(self.visualOffset, self.offset, t)
+        self.controller.setOffset(self.visualOffset)
 
 
 @Component()
@@ -119,6 +125,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     aimingTotalTime = epsilon
     _crosshairAlpha = 1.0
     _crosshairVisible = False
+    _recoil = (0, 0)
+    _recoilControl = (0, 0)
 
     def onInit(self):
         self.canTick = True
@@ -143,6 +151,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.lastY = None
         self.posComp = compClient.CreatePos(self.localId)
         self.modelZScale = 1
+        self.shootSpread = 0
+        self.movementSpread = 0
 
         rot = self.cam.GetCameraRotation()
         self.lastXRot = rot[0]
@@ -154,7 +164,6 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.lastVSmooth = 0
         self.vSmooth = 0
         self.cameraAligned = 'camera'
-
         self.camRot = rot
 
     _fovScale = 1.0
@@ -180,6 +189,9 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.playerView.SetPlayerFovScale(value * self._fovScale)
         self._fovScaleMul = value
 
+    def isFirstPerson(self):
+        return self.playerView.GetPerspective() == 0
+
     def updateCamRot(self):
         x, y, _ = self.camRot
         self.dx = clamp((self.lastXRot - x) * 0.3, -4, 4)
@@ -195,6 +207,30 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     def onUpdate(self, dt):
         self.updateCamRot()
 
+    def applySpreadOffset(self):
+        totalSpread = self.shootSpread + self.movementSpread
+        _x, _y = (random(-1, 1), random(-1, 1))
+        m = math.hypot(_x, _y)
+        s = totalSpread / m
+        ox, oy = _x * s, _y * s
+        crosshairRot.x.setValue(self.localId, crosshairRot.x.getValue(self.localId) + ox)
+        crosshairRot.y.setValue(self.localId, crosshairRot.y.getValue(self.localId) + oy)
+        return (ox, oy)
+
+    def decayRecoil(self, decay):
+        yaw, pitch = self._recoil
+        if yaw == 0 and pitch == 0:
+            return
+        horizontal, vertical = decay
+        # 水平后坐力带方向，向 0 方向衰减
+        if yaw > 0:
+            yaw = max(yaw - horizontal, 0)
+        elif yaw < 0:
+            yaw = min(yaw + horizontal, 0)
+        # 垂直后坐力只向上，直接衰减到 0
+        pitch = max(pitch - vertical, 0)
+        self._recoil = (yaw, pitch)
+
     def onRender(self, dt):
         t = dt * 25
         self.dt = dt
@@ -207,9 +243,30 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.handleCamVignette(dt * 4)
         self.handleMuzzleFlashDisappear(dt)
         self.handleRotFromCameraAnim(dt)
+        self.handleRecoil(dt)
         self.cam.SetCameraRotation(self.camRot)
         self.handleModelZScale()
         self.handleCrosshairAlpha()
+        self.handleCrosshairSpread()
+
+    def handleCrosshairSpread(self):
+        crosshair = CrosshairHud.getInstance()
+        if not crosshair: return
+        fov = math.radians(self.cam.GetFov() * self.fovScale)
+        spread = self.movementSpread + self.shootSpread
+        offset = screenSize()[1] / (2 * math.tan(fov / 2)) * math.tan(math.radians(spread))
+        crosshair.setOffset(offset)
+
+    def handleRecoil(self, dt):
+        x, y, z = self.camRot
+        yaw, pitch = self._recoil
+        # 指数平滑，避免后坐力表现随帧率变化
+        alpha = 1.0 - math.exp(-dt / 0.04)
+        self.camRot = (
+            lerp(x, x - pitch, alpha),
+            lerp(y, y + yaw, alpha),
+            z
+        )
 
     def handleModelZScale(self):
         tau = max(self.aimingTotalTime / 5.0, epsilon)
@@ -263,13 +320,15 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         if not matData:
             return
         self.fadeToCamera(dt)
-        x, y, z = decompose(Matrix.Create(matData))[1]
+        _, rotation, scale = decompose(Matrix.Create(matData))
+        x, y, z = rotation
         y -= 180
         _x, _y, _z = self.animCamRot
         dx, dy = x - _x, y - _y
         self.animCamRot = [x, y, z]
         x, y, z = self.camRot
         self.camRot = (x + dx, y + dy, z + _z)
+        self.fovScaleMul = scale[0]
 
     def handleCamZOnCamRot(self):
         x = self.actorMotion.GetInputVector()[0] * 0.5
@@ -358,14 +417,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     _muzzleFlashTimer = 0.0
     _muzzleFlashActive = False
 
-    def shootCamVfx(self, zRot=1.5, fovScaleMul=1.03, sound=None):
-        self.zRotAdders['shoot'] = zRot
-        self.fovScaleMul = fovScaleMul
+    def shootCamVfx(self, sound, recoil):
         sound and self.audio.PlayCustomUIMusic(sound)
-        def _restore():
-            self.zRotAdders['shoot'] = 0
-            self.fovScaleMul = 1.0
-        addTimer(0.05, _restore, False)
 
         # 枪口火焰：3D 空间点光源（先关再开确保参数更新）
         # getBonePosition 拿到的是世界坐标，用 worldToViewPoint 变换到视野/相机相对坐标
@@ -377,12 +430,9 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         sunAngle = sunRot[2]  # 第三个分量：0=正午, 90=日落/夜晚, 180=午夜, 270=日出
         # 用余弦映射：正午1.0，午夜0.0，日出日落0.5
         dayFactor = 0.5 + 0.5 * math.cos(math.radians(sunAngle))
-        if DEBUG_MUZZLE_VECTOR:
-            brightness = 999.0
-        else:
-            # 用二次幂曲线：白天控制在 0.5 左右，夜晚快速拉高，午夜最强
-            dayFactor = max(0.0, min(1.0, dayFactor))
-            brightness = 0.15 + 5.0 * ((1.0 - dayFactor) ** 2.0)
+        # 用二次幂曲线：白天控制在 0.5 左右，夜晚快速拉高，午夜最强
+        dayFactor = max(0.0, min(1.0, dayFactor))
+        brightness = 0.15 + 5.0 * ((1.0 - dayFactor) ** 2.0)
 
         muzzlePos = [muzzleView.x, muzzleView.y, muzzleView.z, brightness]
 
@@ -393,6 +443,13 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.postProcess.SetParameter('muzzle_flash', 'muzzlePos', muzzlePos)
         self._muzzleFlashTimer = 0.05
         self._muzzleFlashActive = True
+
+        yaw, pitch = self._recoil
+        horizontal, vertical = recoil['value']
+        self._recoil = (
+            yaw + horizontal * rand.choice((-1, 1)),
+            pitch + vertical,
+        )
 
     @EventListener()
     def onLocalLoaded(self, _=events.OnLocalPlayerStopLoading()):

@@ -1,0 +1,17 @@
+{
+    "format_version": "1.12.0",
+    "animation_controllers": {
+        "controller.animation.custom_root": {
+            "initial_state": "default",
+            "states": {
+                "default": {
+                    "animations": [
+                        "custom.base",
+                        { "custom.walk": "!q.is_riding" },
+                        { "custom.riding": "q.is_riding" }
+                    ]
+                }
+            }
+        }
+    }
+}

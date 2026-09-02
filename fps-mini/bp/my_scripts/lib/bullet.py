@@ -10,7 +10,7 @@ from ..engine.architect.compact import (
     Curve, getBonePosition,
     QueryVariable,
 )
-from ..engine.architect.math.utils import entityAabbDef, pointToLineDist
+from ..engine.architect.math.utils import entityAabbDef, pointToLineDist, viewToWorld
 from ..engine.architect.math.double import clamp
 from ..engine.architect.core.configurator import modConf
 from ..engine.architect.utils.enhance.list import find
@@ -37,7 +37,7 @@ class BulletBase(object):
         self.initialSpeed = projectile['baseSpeed'] * velocityModifier # type: float
         self.gravity = vec((0, projectile['gravity'], 0)) # type: Vector3
         self.drag = projectile['drag'] # type: float
-        self.visualOffset = getBonePosition(localId, 'muzzle') - getBonePosition(localId, 'head')
+        self.visualOffset = getBonePosition(localId, 'muzzle') - vec(compClient.CreateCamera(localId).GetPosition())
         self.origin = origin
         self.pos = origin
         self.velocity = mul(direction, self.initialSpeed) # type: Vector3
@@ -320,12 +320,15 @@ class ClientBulletSystem(ClientSubsystem):
         self.activeBullets.append(newBullet)
 
 
-    def createBulletFromFacing(self, asset, velocityModifier):
+    def createBulletFromFacing(self, asset, velocityModifier, offset):
         localId = localPlayerId()
-        pos = vec(compClient.CreatePos(localId).GetPos())
-        dir = not self.level.playerView.GetPerspective()    \
-            and vec(self.level.camera.GetForward())         \
-            or vec(clientApi.GetDirFromRot(compClient.CreateRot(localId)))
+        persp = self.level.playerView.GetPerspective()
+        pos = vec(persp > 1 and compClient.CreatePos(localId).GetPos() or self.level.camera.GetPosition())
+        rx, ry = persp != 2                                                 \
+            and clientApi.GetRotFromDir(self.level.camera.GetForward())     \
+            or compClient.CreateRot(localId).GetRot()
+        ox, oy = offset
+        dir = vec(clientApi.GetDirFromRot((rx + ox, ry + oy)))
         self.createBullet(asset, velocityModifier, dir, pos)
 
 

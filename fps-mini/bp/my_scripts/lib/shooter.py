@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import math
 
 from ..engine.architect.compact import (
     ClientSubsystem, SubsystemClient,
@@ -6,6 +7,7 @@ from ..engine.architect.compact import (
     LevelClient, getOrCreateComponent,
     compClient, clientApi,
     TimerAdapter, addTimer, cancelTimer,
+    epsilon,
 )
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
 from ..engine.architect.fsm.stateTree.common import StateTree, StateNode
@@ -16,7 +18,7 @@ from mod.common.minecraftEnum import OptionId
 
 from .shootVfx import PlayerShooterVfxSystem
 from .bullet import ClientBulletSystem
-from .render import WeaponRenderSystem
+from .render import WeaponRenderSystem, registerWeaponAnimations
 
 
 class GunState:
@@ -32,6 +34,9 @@ class GunAutoState:
 
 
 class GunBasic(object):
+
+    firingDuration = 0
+    shootSpread = 0
 
     def __init__(self, asset):
         # type: (Asset) -> None
@@ -155,7 +160,7 @@ class GunBasic(object):
 
         if self.trigger['fireMode'] != 'burst':
             if self.bulletCount <= 0:
-                # 子弹打空后左键只播空仓/空膛音，不自动触发换弹
+                # 子弹打空后左键只播空仓/空膛音
                 self.tryFireBullet()
                 return
             # firedCase 检测栓动/泵动有没有退空弹
@@ -207,7 +212,7 @@ class GunBasic(object):
         if not self.boltOpend:
             animEx.play(
                 self.bolt['boltOpenAnim'],
-                animLayer, clientOnly=True
+                animLayer
             )
             yield self.wait(self.bolt['boltOpenTime'])
             if token != self.actionToken:
@@ -241,7 +246,7 @@ class GunBasic(object):
 
         animEx.play(
             self.bolt['boltCloseAnim'],
-            animLayer, clientOnly=True
+            animLayer
         )
         yield self.wait(self.bolt['boltCloseTime'])
         if token != self.actionToken:
@@ -274,21 +279,38 @@ class GunBasic(object):
         return True
 
 
+    SPREAD_FUNC = {
+        'OneMinus': lambda s, x: 1 - math.exp(-s * x),
+        'Native': lambda s, x: math.exp(-s * x)
+    }
+
+
+    def calcSpread(self):
+        spreadConf = self.bolt['spread']
+        strength = spreadConf['strength']
+        maxSpread = spreadConf['maxSpread']
+        minSpread = spreadConf['minSpread']
+        dSpread = GunBasic.SPREAD_FUNC[spreadConf['fnType']](strength, self.firingDuration)
+        scale = maxSpread - minSpread
+        self.shootSpread = dSpread * scale + minSpread
+
+
     @Async
     def _fireBullet(self):
         # TODO: shoot bullet
         self.interruptReloading()
         self.isFiring = True
         token = self.actionToken
-        level = self.handling['recoilLevel']
-        if not self.aiming:
-            self.vfxSystem.shootCamVfx(1 + 0.5 * level, 1.01 + 0.02 * level, self.bolt['fireSound'])
-        else:
-            self.vfxSystem.shootCamVfx(0.5 + 0.4 * level, 1.01 + 0.03 * level, self.bolt['fireSound'])
-        self.bulletSystem.createBulletFromFacing(
-            self.bullet, self.velocityModifier
+        boltConf = self.bolt
+        self.vfxSystem.shootCamVfx(
+            boltConf['fireSound'],
+            boltConf['recoil'],
         )
-        self.animEx.play(self.features['shoot']['animation'], replay=True, clientOnly=True, noBlending=True)
+        self.bulletSystem.createBulletFromFacing(
+            self.bullet, self.velocityModifier, self.vfxSystem.applySpreadOffset()
+        )
+        self.calcSpread()
+        self.animEx.play(self.features['shoot']['animation'], replay=True, noBlending=True)
         self.firedCase = True
 
         if self.bolt['cycleMode'] == 'manual':
@@ -400,7 +422,6 @@ class GunBasic(object):
                 shouldUseCupPortBoltOpen                \
                     and self.bolt['cuppedPortOpenBolt'] \
                     or self.bolt['boltOpenAnim'],
-                clientOnly=True
             )
             yield self.wait(
                 shouldUseCupPortBoltOpen                \
@@ -435,17 +456,15 @@ class GunBasic(object):
             if self.fireBuffered and isManual:
                 self.fireBuffered = False
                 if self.boltOpend:
-                    def restoreBoltAndFire():
+                    def restoreBolt():
                         self.fireBuffered = False
                         self.boltOpend = False
                         self.firedCase = False
-                        self.curState = GunState.Firing
-                        self.tryFireBullet()
-                    self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt', clientOnly=True)
-                    self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBoltAndFire, False)
+                        self.curState = GunState.Hold
+                    self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
+                    self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
                 else:
-                    self.curState = GunState.Firing
-                    self.tryFireBullet()
+                    self.curState = GunState.Hold
                 return
 
             if self.bulletCount < self.magazineCapacity and remains > 0:
@@ -458,7 +477,7 @@ class GunBasic(object):
                     self.firedCase = False
                     self.curState = GunState.Hold
 
-                self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt', clientOnly=True)
+                self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
                 self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
             else:
                 self.curState = GunState.Hold
@@ -524,17 +543,13 @@ class EquipAnyWeapon(StateNode):
         if previous in self.children:
             return
         weaponName = tree.mapping.get('weaponName')
-        tree.animEx.clearRegisteredAnimations()
-        tree.animEx.registerAnimations(Asset('animations.' + weaponName).load(True))
-        for name, easingDef in Asset('easings.' + weaponName).load(True).items():
-            tree.animEx.registerEasing(name, easingDef)
-        tree.animEx.updateActorAnimDef()
+        registerWeaponAnimations(tree.animEx.entityId, weaponName)
 
         # 切枪完成后播放新武器 draw
         if tree.pendingDrawKey:
             drawKey = tree.pendingDrawKey
             tree.currentDrawKey = drawKey
-            tree.animEx.play(drawKey, replay=True, clientOnly=True)
+            tree.animEx.play(drawKey, replay=True)
             tree.pendingDrawKey = None
             duration = tree._getAnimDuration(tree.animEx, drawKey)
             addTimer(duration, lambda: tree._finishWeaponSwitch(tree.changeToken), False)
@@ -551,17 +566,13 @@ class FiringState(StateNode):
         if tree.weapon.isManuallyCyclingBolt():
             return not tree.weapon.isFiring
         return not tree.weapon.isFiring or tree.player.isSprinting()
-
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        pass
-
+    
     def exit(self, next, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        pass
+        tree.weapon.firingDuration = 0
 
     def update(self, tree):
         # type: (ShooterSystem) -> None
+        tree.weapon.firingDuration += tree.frameTime
         if not tree.weapon.isFiring:
             tree.finishTasks()
 
@@ -577,6 +588,7 @@ class SprintingState(StateNode):
         tree.stopAiming()
         tree.weapon.isFiring = False
         tree.weapon.curState = GunState.Hold
+        tree.weapon.shootSpread = 0
         # 切枪 draw 还没播完时，不播奔跑动画，避免把拔枪动画顶掉
         if not tree.isSwitchingWeapon:
             tree.animEx.play(tree.movementFeature['sprintAnim'])
@@ -599,6 +611,7 @@ class ReloadingState(StateNode):
     
     def enter(self, previous, tree):
         # type: (StateNode, ShooterSystem) -> None
+        tree.weapon.shootSpread = 0
         if not tree.weapon.feed['canInterrupt']:
             tree.operation.SetCanWalkMode(False)
         # print 'Reloading'
@@ -641,6 +654,12 @@ class IdleState(StateNode):
 
         tree.animEx.play(tree.movementFeature['walkAnim'])
 
+    def update(self, tree):
+        tree.idleDuration += tree.frameTime
+
+    def exit(self, next, tree):
+        tree.idleDuration = 0
+
 
 @SubsystemClient
 class ShooterSystem(ClientSubsystem, StateTree):
@@ -650,6 +669,8 @@ class ShooterSystem(ClientSubsystem, StateTree):
         StateTree.__init__(self, localPlayerId())
 
 
+    frameTime = epsilon
+    idleDuration = 0
     shooterState = ShooterState.Idle
     weapon = None # type: GunBasic | None
     sprintBannedRemains = 0.0
@@ -676,6 +697,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.operation = level.operation
         self.playerView = level.playerView
         self.actorMotion = compClient.CreateActorMotion(localId)
+        self.attr = compClient.CreateAttr(localId)
         self.player = compClient.CreatePlayer(localId)
         self.persona = getOrCreateComponent(localId, PersonaRendererComponent)
         self.animEx = getOrCreateComponent(localId, AnimationExComponent)
@@ -702,6 +724,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
     def onRender(self, dt):
         # 异步触发的换弹/射击没有经过 ShooterSystem 主动调用，这里补一次状态机刷新
+        self.frameTime = dt
         if self.weapon:
             if self.weapon.curState == GunState.Reloading \
                     and self.currentStateName() != PostureState.Reloading:
@@ -751,7 +774,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
         # 旧武器先播 holster，播完再切渲染资源和 draw
         if oldWeapon and holsterKey:
-            oldWeapon.animEx.play(holsterKey, replay=True, clientOnly=True)
+            oldWeapon.animEx.play(holsterKey, replay=True)
             duration = self._getAnimDuration(oldWeapon.animEx, holsterKey)
             addTimer(duration, lambda: self._finishChangeWeapon(self.pendingWeaponName, token), False)
             return
@@ -771,11 +794,11 @@ class ShooterSystem(ClientSubsystem, StateTree):
             info = self.animEx.getPlayingAnimation(drawKey)
             if info:
                 progress = info.playTime
-            self.animEx.stop(drawKey, clientOnly=True)
+            self.animEx.stop(drawKey)
 
         if progress > 0.01:
             self.switchPhase = 'draw_reverse'
-            self.animEx.play(drawKey, replay=True, playRate=-1, startOffset=progress, clientOnly=True)
+            self.animEx.play(drawKey, replay=True, playRate=-1, startOffset=progress)
             addTimer(progress, lambda: self._finishChangeWeapon(self.pendingWeaponName, token), False)
             return
 
@@ -815,7 +838,6 @@ class ShooterSystem(ClientSubsystem, StateTree):
                 self.switchPhase = 'draw'
                 self.currentDrawKey = None
             # 本地立即换渲染资源，同时通知服务器同步给其他客户端
-            renderSystem.changeRenderResource(localPlayerId(), weaponName)
             renderSystem.sendServer('renderResource', { 'entity': localPlayerId(), 'uri': weaponName })
         else:
             self.weapon = None
@@ -826,7 +848,6 @@ class ShooterSystem(ClientSubsystem, StateTree):
             self.currentDrawKey = None
             self.switchPhase = None
             self.isSwitchingWeapon = False
-            renderSystem.changeRenderResource(localPlayerId(), None)
             renderSystem.sendServer('renderResource', { 'entity': localPlayerId(), 'uri': None })
 
         self.switchNode(self.root)
@@ -951,3 +972,28 @@ class ShooterSystem(ClientSubsystem, StateTree):
         else:
             # 射击/拉栓过程中按 R：记下来，等拉栓闭锁完成后自动进入换弹
             self.weapon.reloadBuffered = True
+
+    def decayRecoil(self):
+        decay = self.weapon.bolt['recoil']['decay']
+        self.shooterVfx.decayRecoil(decay)
+
+    def updateMovementSpread(self):
+        baseSpread = not self.attr.isEntityOnGround() and 1.5 or 0
+        isMoving = self.player.isMoving()
+        movement = self.weapon.features.get('movement')
+        if movement:
+            baseSpread += isMoving and movement['spread'] or 0
+        self.shooterVfx.movementSpread = baseSpread
+
+    def decaySpread(self):
+        decay = self.weapon.bolt['spread']['decay']
+        shootSpread = max(0, self.weapon.shootSpread - decay * math.log(self.idleDuration * decay + 1))
+        self.shooterVfx.shootSpread = shootSpread
+        self.weapon.shootSpread = shootSpread
+
+    def onUpdate(self, dt):
+        if not self.weapon:
+            return
+        self.decayRecoil()
+        self.updateMovementSpread()
+        self.decaySpread()

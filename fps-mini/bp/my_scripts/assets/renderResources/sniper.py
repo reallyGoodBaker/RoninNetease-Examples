@@ -1,5 +1,6 @@
 Asset = {
     'model': 'geometry.weapons.sniper',
+    'third_model': 'geometry.template.third.bolt',
     'arms': 'geometry.arms.bolt',
     'materials': {
         'weapon': 'metallic_without_smooth',
@@ -11,7 +12,7 @@ Asset = {
     'render': {
         'first_person': [
             'controller.render.template.weapon',
-            'controller.render.fps.arm'
+            'controller.render.first_person.arm'
         ],
         'third_person': []
     }

@@ -22,10 +22,18 @@ Asset = {
         # 通用属性：
         'holdOpenOnEmpty': False,        # 弹匣打空后是否挂起枪机(空仓挂机)
         # 枪机后座撞击产生的后坐力冲量
-        'recoil': [
-            0.3,                    # 水平方向随机范围 [-x, x]
-            0.8                     # 垂直方向基础值 [0, y]
-        ],
+        'recoil': {
+            'value': [0, 0],
+            'decay': [0, 0],
+        },
+        # 枪机散布
+        'spread': {
+            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
+            'strength': 0.3,          # 枪机散布的强度 (这是非线性的，建议多调试)
+            'decay': 2,
+            'maxSpread': 1.5,
+            'minSpread': 0.2,
+        },
         'fireSound': 'shoot.bolt',       # 射击音效，空字符串为不播放
         'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         'ejectVelocity': (1.5, 3, 0), # 退弹时给子弹附加的速度
@@ -74,7 +82,6 @@ Asset = {
         'adsInTime': 0.25,          # 进入开镜的时间
         'adsOutTime': 0.25,         # 退出开镜的时间
         'sprintToFireTime': 0.2,    # 跑射延迟
-        'recoilLevel': 3,           # 后坐力等级，影响视觉效果
     },
 
     # 更多 - 可以自定义处理
@@ -102,6 +109,7 @@ Asset = {
             'sprintAnim': 'fp.run',
             'draw': 'fp.draw',
             'holster': 'fp.holster',
+            'spread': 1,
         },
     },
 

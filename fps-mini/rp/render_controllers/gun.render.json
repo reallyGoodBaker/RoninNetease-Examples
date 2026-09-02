@@ -27,7 +27,7 @@
             ],
             "smooth_normal": false
         },
-        "controller.render.fps.arm": {
+        "controller.render.first_person.arm": {
             "geometry": "geometry.arms",
             "textures": [
                 "texture.default"
@@ -59,6 +59,39 @@
             ],
             "textures": [
                 "texture.default"
+            ]
+        },
+        "controller.render.third_person.torso": {
+            "filter_lighting": true,
+            "geometry": "geometry.player",
+            "materials": [
+                {
+                    "*": "Material.default"
+                }
+            ],
+            "textures": [
+                "texture.default"
+            ]
+        },
+        "controller.render.third_person.weapon": {
+            "filter_lighting": true,
+            "geometry": "geometry.third_model",
+            "materials": [
+                {
+                    "*": "material.weapon",
+                    "glow*": "material.glow",
+                    "scope_inner": "material.scope",
+                    "eyepiece": "material.eyepiece"
+                }
+            ],
+            "textures": [
+                "texture.weapon"
+            ],
+            "part_visibility": [
+                { "*": true },
+                { "*arm": false },
+                { "*leg": false },
+                { "head": false }
             ]
         }
     }

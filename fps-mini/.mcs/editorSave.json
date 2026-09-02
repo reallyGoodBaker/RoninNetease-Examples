@@ -63,6 +63,12 @@
                 "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\ammo.json": [
                     "/main"
                 ],
+                "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\crosshair.json": [
+                    "/main",
+                    "/main/cross",
+                    "/main/cross/top",
+                    "/main/cross/left"
+                ],
                 "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\shooter_indicator.json": [
                     "/main"
                 ]
