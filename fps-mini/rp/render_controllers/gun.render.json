@@ -71,7 +71,8 @@
             "part_visibility": [
                 { "*": true },
                 { "*arm": false },
-                { "*sleeve": false }
+                { "*sleeve": false },
+                { "bayonet": "v.attach_bayonet ?? 0" }
             ]
         },
         "controller.render.no_shadow": {

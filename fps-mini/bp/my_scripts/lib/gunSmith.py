@@ -175,7 +175,6 @@ class GunSmithUi(UiSubsystem):
 
     def _bindPaletteEvents(self):
         # type: () -> None
-        print '[GunSmith] bind palette events'
         self.addEventListener('/palette/picker', 'down', self._onPalettePicker)
         self.addEventListener('/palette/picker', 'move', self._onPalettePicker)
         self.addEventListener('/palette/hue', 'down', self._onPaletteHue)
@@ -222,13 +221,10 @@ class GunSmithUi(UiSubsystem):
         )
         try:
             control = self.find('/palette/picker/color')
-            print '[GunSmith] update picker color:', control, color
             if control:
                 image = control.asImage()
-                print '[GunSmith] update picker image:', image
                 if image:
                     image.SetSpriteColor(color)
-                    print '[GunSmith] update picker set ok'
         except Exception as errorObject:
             print '[GunSmith] update picker pure color exception:', repr(errorObject)
 
@@ -241,20 +237,16 @@ class GunSmithUi(UiSubsystem):
             rawY = float(ev.y)
             localX = rawX - float(origin[0])
             localY = rawY - float(origin[1])
-            print '[GunSmith] palette frac debug:', controlPath, origin, size, rawX, rawY
             return (
                 max(0.0, min(1.0, localX / float(size[0]))),
                 max(0.0, min(1.0, localY / float(size[1]))),
             )
         except Exception as errorObject:
-            print '[GunSmith] palette fraction exception:', repr(errorObject)
             return (0.0, 0.0)
 
     def _onPalettePicker(self, ev):
         # type: (object) -> None
-        print '[GunSmith] picker event', ev.x, ev.y
         x, y = self._paletteLocalFraction(self.palettePicker, ev, '/palette/picker')
-        print '[GunSmith] picker fraction', x, y
         # Picker: bottom-left is origin.
         # x: 0 = white, 1 = pure hue color.
         # y: bottom = dark, top = bright.
@@ -265,9 +257,7 @@ class GunSmithUi(UiSubsystem):
 
     def _onPaletteHue(self, ev):
         # type: (object) -> None
-        print '[GunSmith] hue event', ev.x, ev.y
         x, y = self._paletteLocalFraction(self.paletteHue, ev, '/palette/hue')
-        print '[GunSmith] hue fraction', x, y
         # Hue strip: top-left origin, y down from red to red (0..1).
         self.currentHue = y
         self._applyPaletteColor()
@@ -290,12 +280,10 @@ class GunSmithUi(UiSubsystem):
     def setAppearanceData(self, appearance):
         # type: (dict) -> None
         self.appearanceData = appearance if isinstance(appearance, dict) else {}
-        print '[GunSmith] setAppearanceData:', self.appearanceData
 
     def _loadAppearanceToPalette(self):
         # type: () -> None
         data = self.appearanceData or {}
-        print '[GunSmith] load appearance:', data
         if 'hue' in data:
             self.currentHue = float(data['hue'])
         if 'saturation' in data:

@@ -169,7 +169,7 @@ class GunServerSyncSystem(ServerSubsystem):
 
         if changed:
             view.set(uid, copy.deepcopy(record))
-        pass
+        print '[GunServerSync] load state:', uid, itemName, record
         return record
 
     def _currentStateForCarried(self, playerId, requestedName):
@@ -254,12 +254,8 @@ class GunServerSyncSystem(ServerSubsystem):
     def ensureGunState(self, playerId, itemName, extraId):
         # type: (str, str, str) -> dict
         """Fetch server state for the currently carried gun.
-
-        The client sends the item identifier and its current extraId. The server
-        uses the actual carried item as truth, creates a uid if it is missing,
-        and returns the server-stored gun state.
         """
-        pass
+        print '[GunServerSync] ensure start:', playerId, itemName, extraId
         if not isinstance(itemName, str) or not isGunItemName(itemName):
             pass
             return {
@@ -270,6 +266,7 @@ class GunServerSyncSystem(ServerSubsystem):
             }
 
         uid, state = self._resolveRequestedState(playerId, itemName, extraId)
+        print '[GunServerSync] ensure resolved:', uid, state
         if uid is None:
             pass
             return state
@@ -280,7 +277,7 @@ class GunServerSyncSystem(ServerSubsystem):
             'uid': uid,
             'state': state,
         }
-        pass
+        print '[GunServerSync] ensure ok:', uid, state
         return result
 
     @Remote
@@ -310,6 +307,7 @@ class GunServerSyncSystem(ServerSubsystem):
             # Client may be stale; still write to the actual carried uid.
             pass
 
+        print '[GunServerSync] setAppearance:', itemName, extraId, appearance
         state['appearance'] = copy.deepcopy(appearance)
         view = getOrCreateGunStorage(uid, itemName)
         view.set(uid, copy.deepcopy(state))
@@ -350,6 +348,8 @@ class GunServerSyncSystem(ServerSubsystem):
             # Client may be stale; still write to the actual carried uid.
             pass
 
+        print '[GunServerSync] setAmmoCount:', itemName, extraId, ammoCount
+        print '[GunServerSync] setAmmoCount:', itemName, extraId, ammoCount
         state['ammoCount'] = max(0, int(ammoCount))
         view = getOrCreateGunStorage(uid, itemName)
         view.set(uid, copy.deepcopy(state))
@@ -389,6 +389,7 @@ class GunServerSyncSystem(ServerSubsystem):
         if uid is None:
             return state
 
+        print '[GunServerSync] setAttachments:', itemName, extraId, clean, appearance
         state['attachments'] = clean
         if appearance is not None:
             if not isinstance(appearance, dict):
@@ -398,7 +399,8 @@ class GunServerSyncSystem(ServerSubsystem):
                     'uid': '',
                     'state': None,
                 }
-            state['appearance'] = copy.deepcopy(appearance)
+            print '[GunServerSync] setAppearance:', itemName, extraId, appearance
+        state['appearance'] = copy.deepcopy(appearance)
         view = getOrCreateGunStorage(uid, itemName)
         view.set(uid, copy.deepcopy(state))
 

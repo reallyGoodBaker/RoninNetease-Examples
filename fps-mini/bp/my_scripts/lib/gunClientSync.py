@@ -198,7 +198,7 @@ class GunClientSyncSystem(ClientSubsystem):
             print '[GunClientSync] set appearance no item'
             return None
 
-        print '[GunClientSync] set appearance send:', appearance
+        print '[GunClientSync] set ammo send:', ammoCount
         token = self._requestToken
         try:
             future = remote.client.invoke(
@@ -313,7 +313,4 @@ class GunClientSyncSystem(ClientSubsystem):
     # World-load sync is driven by PlayerShooterInitSystem so cache reset and
     # weapon hiding happen in a deterministic order.
 
-    @EventListener()
-    def onCarriedItemChanged(self, ev=events.OnCarriedNewItemChangedClientEvent()):
-        # type: (object) -> None
-        self._handleCarriedItem(ev.itemDict)
+    # Carried item sync is driven by PlayerShooterInitSystem.

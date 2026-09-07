@@ -50,14 +50,8 @@ class PlayerShooterInitSystem(ClientSubsystem):
             ammoCount = None
             serverReady = False
             uid = ''
-            if asset:
-                sync = GunClientSyncSystem.getInstance()
-                state = sync.getCanonicalState()
-                if state and state.get('itemName') == itemName:
-                    serverReady = True
-                    uid = sync.getCurrentUid()
-                    savedAmmo = state.get('ammoCount')
-                    ammoCount = savedAmmo if savedAmmo is not None and savedAmmo >= 0 else None
+            # Do not render the gun until the server state has arrived.
+            # PlayerShooterInitSystem no longer trusts any client-side cache.
             self.shooter.changeWeapon(asset, itemName, serverReady, ammoCount, uid)
             self.isMainhandAny = bool(asset)
             cam.SetCameraOffset((1, -0.2, -0.5))
@@ -73,6 +67,7 @@ class PlayerShooterInitSystem(ClientSubsystem):
 
     @EventListener()
     def onCarriedItemChanged(self, ev=events.OnCarriedNewItemChangedClientEvent()):
+        GunClientSyncSystem.getInstance().syncCurrentCarried()
         self.changeWeapon(ev.itemDict)
 
     @EventListener()

@@ -19,8 +19,7 @@ Asset = {
         ],
         'third_person': [
             'controller.render.third_person.torso',
-            'controller.render.third_person.weapon',
-            'controller.render.tint.overlay'
+            'controller.render.third_person.weapon'
         ]
     }
 }

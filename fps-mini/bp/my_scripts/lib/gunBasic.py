@@ -197,9 +197,23 @@ class GunBasic(object):
             try:
                 asset = Asset('attachments.' + name).load(True)
             except Exception:
-                continue
+                asset = None
             if asset and asset.get('attachmentId') == attachmentId:
                 return asset
+            # Subpackage: attachments.appearance.*
+            try:
+                subNames = dir(Asset.reach('attachments.' + name, True))
+            except Exception:
+                subNames = []
+            for sub in subNames:
+                if sub.startswith('__'):
+                    continue
+                try:
+                    subAsset = Asset('attachments.' + name + '.' + sub).load(True)
+                except Exception:
+                    continue
+                if subAsset and subAsset.get('attachmentId') == attachmentId:
+                    return subAsset
         return None
 
     def applyServerAttachments(self, attachments):
@@ -276,6 +290,11 @@ class GunBasic(object):
         self.featureComponent.clear()
         self.featureComponent.applyFromDict(asset['features'])
         self.slots = asset['slots']
+        self.attachments = {}
+        self.attachmentCache = {}
+        for slot in self.slots:
+            if slot.get('type') == 'baked':
+                self._setBakedAttachmentEnabled(slot, False)
         self.boltCycleMode = self.bolt['cycleMode']
         self.isFullAuto = self.trigger.get('isFullAuto')
 
