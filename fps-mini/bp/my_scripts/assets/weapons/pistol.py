@@ -21,16 +21,6 @@ Asset = {
             'value': [0.1, 0.4],
             'decay': [0.2, 0.3],
         },
-        # 枪机散布
-        'spread': {
-            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
-            'strength': 0.3,          # 枪机散布的强度 (这是非线性的，建议多调试)
-            'decay': 2,
-            'maxSpread': 2,
-            'minSpread': 0.5,
-        },
-        'fireSound': 'shoot.pistol',            # 射击音效，空字符串为不播放
-        'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         'ejectVelocity': (1.5, 3, 0), # 退弹时给子弹附加的速度
     },
 
@@ -65,70 +55,55 @@ Asset = {
     # 枪管组件 - 决定子弹初速和子弹散步
     'barrel': {
         'velocityModifier': 1.0,        # 子弹的 baseSpeed 乘以这个值就是出膛速度
-        'maxSpread': 1.0,               # 子弹的最大散布角度
-        'spreadIncreasePerShot': 0.1,   # 每次射击增加的散布角度
+        'spread': {
+            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
+            'strength': 0.3,          # 枪机散布的强度 (这是非线性的，建议多调试)
+            'decay': 2,
+            'maxSpread': 2,
+            'minSpread': 0.5,
+        },
     },
 
     # 操控性 - 影响玩家操纵手感
     'handling': {
+        'animHold': 'fp.hold',             # 持枪不动动画
         'speedModifier': 1.0,       # 移动速度倍率
-        'canJump': True,
-        'canSprint': True,
-        'adsInTime': 0.25,          # 进入开镜的时间
-        'adsOutTime': 0.25,         # 退出开镜的时间
+        'draw': 'fp.draw',
+        'holster': 'fp.holster',
         'sprintToFireTime': 0.2,    # 跑射延迟
-    },
-
-    # 更多 - 可以自定义处理
-    'extra': {
-        'slide': {                  # 滑铲射击配置, 这部分数据完全暴露，需要时直接获取
-            'canSlideShoot': True,
-            'slideToFireTime': 0.35,
-            'slideToADS_Time': 0.45,
-        }
+        'gunsmith': 'gunsmith',
     },
 
     # 功能 - 定义玩家控制项 (里面的功能由代码驱动)
     'features': {
         'shoot': {
-            'animation': 'fp.shoot'
+            'animation': 'fp.shoot',
+            'fireSound': 'shoot.pistol',            # 射击音效，空字符串为不播放
+            'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         },
         'aim': {     # 基础瞄准功能
             'scale': 1.2,
             'camera': 'iron_sight',     # 瞄准时相机名称
             'modelScale': 1,            # 瞄准时z轴缩放
-            'ads': 0.15,
+            'adsIn': 0.15,
+            'adsOut': 0.15,
+            'vignette': 0.2,            # 暗角范围
+            'spreadMultiplier': 0.5,
         },
-        'movement': {   # 基础移动功能
-            'draw': 'fp.draw',
-            'holster': 'fp.holster',
-            'walkAnim': 'fp.hold',
-            'sprintAnim': 'fp.run',
+        'walk': {
+            'animation': '',
             'spread': 1,
+        },
+        'sprint': {
+            'cast': '',
+            'swing': '',
+            'animation': 'fp.run',
+            'sprintOutTime': 0.5,
         },
     },
 
     # --- 配件槽位数组 (slots) ---
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
-        {
-            'category': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
-            'attachTo': 'muzzle_01',         # 绑定的骨骼名称
-            'offset': (0, 0, 0),             # 绑骨的偏移
-            'rotation': (0, 0, 0),           # 绑骨的旋转
-            'scale': 1.0                     # 绑骨的缩放
-        },
-        {
-            'category': 'optic',
-            'attachTo': 'optic_01',
-        },
-        {
-            'category': 'magazine',
-            'attachTo': 'mag_01',
-        },
-        {
-            'category': 'underbarrel',
-            'attachTo': 'underbarrel_01',
-        }
     ]
 }

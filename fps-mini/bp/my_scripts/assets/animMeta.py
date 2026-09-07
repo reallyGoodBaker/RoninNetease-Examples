@@ -76,6 +76,27 @@ AnimMeta = {
         "loop": True,
         "length": -1
     },
+    "animation.weapons.bolt.gunsmith": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.weapons.bolt.bayonet": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.weapons.bolt.bayonet.execute": {
+        "loop": "hold_on_last_frame",
+        "length": 1.0625,
+        "notifies": {
+            "0.4167": [
+                {
+                    "name": "attck",
+                    "state": 1
+                }
+            ]
+        },
+        "extra": {}
+    },
     "animation.template.pistol.hold": {
         "loop": "hold_on_last_frame",
         "length": -1

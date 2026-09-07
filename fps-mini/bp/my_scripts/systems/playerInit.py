@@ -2,21 +2,22 @@ from ..lib.shooter import ShooterSystem
 from ..engine.architect.compact import (
     ClientSubsystem, SubsystemClient,
     EventListener, events,
-    getOrCreateComponent, localPlayerId,
-    compClient,
+    getOrCreateComponent, BaseCompClient, Component,
+    Sched, Query, EntityId,
+    compClient, localPlayerId,
 )
 
+from ..engine.architect.math.utils import facing
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
 from ..assets.animMeta import AnimMeta
 from ..lib.render import WeaponRenderSystem
+from ..lib.gunClientSync import GunClientSyncSystem
+from ..engine.architect.plugins.motion.playerMotionComp import PlayerMotionComponent
+
+from mod.common.minecraftEnum import KeyBoardType
 
 
-WeaponMapping = {
-    'roninexample:pistol': 'pistol',
-    'roninexample:bolt': 'bolt',
-    'roninexample:sniper': 'sniper',
-    'roninexample:auto': 'auto',
-}
+from ..lib.gunSync import getGunItemNames
 
 
 @SubsystemClient
@@ -24,14 +25,16 @@ class PlayerShooterInitSystem(ClientSubsystem):
 
     isMainhandAny = False
 
+    def onInit(self):
+        self.canTick = True
 
     def onReady(self):
         self.shooter = ShooterSystem.getInstance()
         self.renderSystem = WeaponRenderSystem.getInstance()
         animEx = getOrCreateComponent(localPlayerId(), AnimationExComponent)
+        self.animEx = animEx
         animEx.registerMetadatas(AnimMeta)
-        WeaponRenderSystem.registerAssetMapping(WeaponMapping)
-
+        WeaponRenderSystem.registerAssetMapping(getGunItemNames())
 
     def changeWeapon(self, itemDict=None):
         cam = compClient.CreateCamera(localPlayerId())
@@ -40,19 +43,33 @@ class PlayerShooterInitSystem(ClientSubsystem):
             self.shooter.changeWeapon(None)
             cam.SetCameraOffset((0, 0, 0))
         else:
-            asset = WeaponMapping.get(itemDict['newItemName'])
-            self.shooter.changeWeapon(asset)
+            weaponMapping = getGunItemNames()
+            WeaponRenderSystem.registerAssetMapping(weaponMapping)
+            itemName = itemDict.get('newItemName') or itemDict.get('itemName')
+            asset = weaponMapping.get(itemName)
+            ammoCount = None
+            serverReady = False
+            uid = ''
+            if asset:
+                sync = GunClientSyncSystem.getInstance()
+                state = sync.getCanonicalState()
+                if state and state.get('itemName') == itemName:
+                    serverReady = True
+                    uid = sync.getCurrentUid()
+                    savedAmmo = state.get('ammoCount')
+                    ammoCount = savedAmmo if savedAmmo is not None and savedAmmo >= 0 else None
+            self.shooter.changeWeapon(asset, itemName, serverReady, ammoCount, uid)
             self.isMainhandAny = bool(asset)
-            cam.SetCameraOffset((0.8, 0, -1.5))
+            cam.SetCameraOffset((1, -0.2, -0.5))
         self.shooter.shooterVfx.setCrosshairVisible(self.isMainhandAny)
-
 
     @EventListener()
     def onLocalPlayerLoaded(self, _=events.OnLocalPlayerStopLoading()):
+        self.shooter.resetSessionCache()
+        GunClientSyncSystem.getInstance().syncCurrentCarried()
         itemComp = compClient.CreateItem(localPlayerId())
         itemDict = itemComp.GetCarriedItem()
         self.changeWeapon(itemDict)
-
 
     @EventListener()
     def onCarriedItemChanged(self, ev=events.OnCarriedNewItemChangedClientEvent()):
@@ -83,10 +100,13 @@ class PlayerShooterInitSystem(ClientSubsystem):
         if not self.isMainhandAny:
             return
 
-        if ev.isDown == '0':
-            return
-        if ev.key == '82':
+        isDown = ev.isDown == '1'
+        if ev.key == '82' and isDown:
             self.shooter.reload()
+            return
+        if ev.key == '72' and isDown:
+            self.shooter.startGunSmith()
+            return
 
     @EventListener()
     def onPlayerAction(self, ev=events.OnLocalPlayerActionClientEvent()):

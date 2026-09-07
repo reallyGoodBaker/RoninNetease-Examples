@@ -226,7 +226,7 @@ class BulletBase(object):
         headShotMul = (kinetic['headshotMultiplier'] * int(isHeadShot)) or 1
         baseDamage = kinetic['baseDamage']
         damageMul = Asset(kinetic['damageCurve']).load(True) # type: Curve
-        overpenMul = not overPun and 1 or (isHeadShot and 1 or self.penetrate['damageRetentionPerPass'])
+        overpenMul = not overPun and 1 or self.penetrate['damageRetentionPerPass']
         return baseDamage, damageMul.getValue(self.speed) * overpenMul * headShotMul
 
 

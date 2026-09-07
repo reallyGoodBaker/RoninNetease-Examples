@@ -79,6 +79,7 @@ def applyRenderResource(renderer, asset, renderParams):
     for k, v in asset['materials'].items():
         renderer.AddPlayerRenderMaterial(k, v)
     renderer.AddPlayerTexture('weapon', asset['texture'])
+    renderer.AddPlayerTexture('tint_mask', asset.get('tintMaskTexture') or 'textures/entity/weapons/bolt_tint_mask')
     first = asset['render']['first_person']
     third = asset['render']['third_person']
     renderParams.first = first
@@ -90,6 +91,8 @@ def applyRenderResource(renderer, asset, renderParams):
 
     renderer.AddPlayerAnimation('custom.base', 'animation.custom.weapons.root')
     renderer.AddPlayerAnimation('custom.walk', 'animation.custom.humanoid.walk')
+    renderer.AddPlayerAnimation('custom.hold', 'animation.custom.humanoid.hold')
+    renderer.AddPlayerAnimation('custom.aiming', 'animation.custom.humanoid.aiming')
     renderer.AddPlayerAnimation('custom.riding', 'animation.custom.humanoid.riding')
     renderer.AddPlayerAnimationController('custom.root', 'controller.animation.custom_root')
     renderer.AddPlayerScriptAnimate('custom.root', autoReplace=True)

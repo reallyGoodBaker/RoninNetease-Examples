@@ -4,6 +4,7 @@
         "lensflare",
         "depthoffield",
         "gaussianblur",
+        "fullscreenblur",
         "coloradjustment",
         "vignette",
         "lensstain",
@@ -185,6 +186,32 @@
             ]
         },
         {
+            "name": "fullscreenblur",
+            "paras": [
+                {
+                    "name": "blurDistance",
+                    "value": 3.0,
+                    "range": [0.0, 100.0]
+                },
+                {
+                    "name": "radius",
+                    "value": 3.0,
+                    "range": [0.0, 10.0]
+                }
+            ],
+            "enable": false,
+            "pass_array": [
+                {
+                    "render_target": {
+                        "width": 1.0,
+                        "height": 1.0
+                    },
+                    "material": "fullscreen_depth_blur",
+                    "depth_enable": true
+                }
+            ]
+        },
+        {
             "name": "coloradjustment",
             "paras": {
                 "brightness": 1.0,
@@ -240,10 +267,10 @@
         {
             "name": "depthoffield",
             "paras": {
-                "focus": 2,
-                "nearBlurScale": 0.1,
-                "farBlurScale": 6.0,
-                "blurRaidus": 0.4,
+                "focus": 2.0,
+                "nearBlurScale": 0.0,
+                "farBlurScale": 3.0,
+                "blurRaidus": 0.5,
                 "useAuto": 0.0
             },
             "enable": false,
@@ -320,7 +347,7 @@
                 },
                 {
                     "name": "snow_size",
-                    "value": 2.0,
+                    "value": 3.0,
                     "range": [
                         0.5,
                         16.0

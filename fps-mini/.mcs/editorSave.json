@@ -42,7 +42,7 @@
             },
             "32768_sound_definitions": {
                 "createTime": 1784224282.61727,
-                "modifyTime": 1784224282.61727
+                "modifyTime": 1788441337.8535998
             },
             "8192_roninexample_category_config": {
                 "createTime": 1782887264.7413619,
@@ -56,9 +56,28 @@
         "PresetInstanceTreeData": []
     },
     "UI": {
-        "customPrefabGroupExpand": [],
+        "customPrefabGroupExpand": [
+            "gun_smith"
+        ],
         "expandData": {
-            "prefab": {},
+            "prefab": {
+                "gun_smith.attachment_category": [
+                    "/netease_prefab_screen",
+                    "/netease_prefab_screen/attachment_category",
+                    "/netease_prefab_screen/attachment_category/container"
+                ],
+                "gun_smith.attachment_render": [
+                    "/netease_prefab_screen"
+                ],
+                "gun_smith.categories": [
+                    "/netease_prefab_screen",
+                    "/netease_prefab_screen/categories"
+                ],
+                "gun_smith.selection": [
+                    "/netease_prefab_screen",
+                    "/netease_prefab_screen/selection"
+                ]
+            },
             "screen": {
                 "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\ammo.json": [
                     "/main"
@@ -69,8 +88,17 @@
                     "/main/cross/top",
                     "/main/cross/left"
                 ],
+                "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\gun_smith.json": [
+                    "/main",
+                    "/main/categories/scroll_mouse/scroll_view/stack_panel/background_and_viewport/scrolling_view_port",
+                    "/main/palette",
+                    "/main/palette/picker",
+                    "/main/palette/hue"
+                ],
                 "C:\\Projects\\RoninNetease-Examples\\fps-mini\\rp\\ui\\shooter_indicator.json": [
-                    "/main"
+                    "/main",
+                    "/main/info_board",
+                    "/main/info_board/damage"
                 ]
             }
         }

@@ -733,6 +733,75 @@
 					"rotation": [12.5, 0, 0]
 				}
 			}
+		},
+		"animation.weapons.bolt.gunsmith": {
+			"loop": "hold_on_last_frame",
+			"anim_time_update": "v.anim_time_weapons_bolt_gunsmith",
+			"blend_weight": "v.blend_weapons_bolt_gunsmith ?? 1",
+			"bones": {
+				"center": {
+					"rotation": [0, -100, 0],
+					"position": [-25.36869, 3.4, -33.12363]
+				},
+				"clip": {
+					"scale": 0
+				},
+				"view_bayonet": {
+					"position": [11.8, 1.8, -11.5]
+				}
+			}
+		},
+		"animation.weapons.bolt.bayonet": {
+			"loop": "hold_on_last_frame",
+			"bones": {
+				"center": {
+					"rotation": [4, 0, 40.5],
+					"position": [-5.5, -0.3, 5.5]
+				}
+			},
+			"anim_time_update": "v.anim_time_weapons_bolt_bayonet",
+			"blend_weight": "v.blend_weapons_bolt_bayonet ?? 1"
+		},
+		"animation.weapons.bolt.bayonet.execute": {
+			"loop": "hold_on_last_frame",
+			"animation_length": 1.0625,
+			"anim_time_update": "v.anim_time_weapons_bolt_bayonet_execute",
+			"blend_weight": "v.blend_weapons_bolt_bayonet_execute ?? 1",
+			"bones": {
+				"center": {
+					"rotation": {
+						"0.0": [4, 0, 40.5],
+						"0.1042": [2.0485, -2.2808, 40.5409],
+						"0.375": [2.0485, -2.2808, 40.5409],
+						"0.4583": [2.05, -2.28, 40.54],
+						"0.5208": [2.05, -2.28, 40.54],
+						"0.5833": [2.05, -2.28, 40.54],
+						"0.75": [2.05, -2.28, 40.54],
+						"1.0208": [0, 0, 0]
+					},
+					"position": {
+						"0.0": [-5.5, -0.3, 5.5],
+						"0.1042": [-5.5, -0.3, 10.6],
+						"0.375": [-5.5, -0.3, 13.6],
+						"0.4583": [-5.5, -0.3, -3.4],
+						"0.5208": [-5.5, -0.3, -4.4],
+						"0.5833": [-5.5, -0.3, -3.4],
+						"0.75": [-5.5, -0.3, -3.4],
+						"1.0208": [0, 0, 0]
+					}
+				},
+				"camera": {
+					"rotation": {
+						"0.2292": [0, 0, 0],
+						"0.4167": [-0.5, 0, 0],
+						"0.4583": [-2, 0, 0],
+						"0.5": [0, 0, 0]
+					}
+				}
+			},
+			"timeline": {
+				"0.4375": "v.notify_attck = 1;"
+			}
 		}
 	}
 }

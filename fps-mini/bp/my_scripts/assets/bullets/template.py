@@ -11,8 +11,8 @@ Asset = {
     # 弹道
     'projectile': {
         'baseSpeed': 250,               # 初速基准值 (米/秒), 最终初速 = 此值 + 枪管加成
-        'gravity': -2,                  # 重力值（为了娱乐性不采用真实的重力）
-        'drag': 0.02,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
+        'gravity': -1.8,                  # 重力值（为了娱乐性不采用真实的重力）
+        'drag': 0.03,                   # 空气阻力系数, 影响速度衰减 (0为无衰减)
         'caliber': '9mm',               # 口径标识 (string), 作为 customTag 传入 hurt 组件
         'bounce': False,                # 子弹可弹跳（比如榴弹）
         'ignoreEntities': 'penetrate.entities',     # 子弹不处理的实体

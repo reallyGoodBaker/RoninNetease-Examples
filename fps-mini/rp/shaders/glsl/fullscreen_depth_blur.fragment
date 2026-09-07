@@ -1,0 +1,65 @@
+// __multiversion__
+// This signals the loading code to prepend either #version 100 or #version 300 es as apropriate.
+precision highp float;
+
+#include "fragmentVersionCentroidUV.h"
+#include "uniformPerFrameConstants.h"
+#include "uniformWorldConstants.h"
+#include "uniformRenderChunkConstants.h"
+
+LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+LAYOUT_BINDING(2) uniform sampler2D TEXTURE_2;
+
+// EXTRA_VECTOR1.x = 开始模糊的距离（方块/米）
+// EXTRA_VECTOR1.y = 模糊半径（像素）
+uniform vec4 EXTRA_VECTOR1;
+
+// EXTRA_VECTOR4.zw = 当前渲染目标的 texel size (1/width, 1/height)
+uniform vec4 EXTRA_VECTOR4;
+
+highp vec3 getWorldPos(vec2 uv, float z) {
+    highp vec4 pos = vec4(uv, z, 1.0) * 2.0 - 1.0;
+    highp vec4 worldPos = inverse(PROJ * WORLDVIEW) * pos;
+    return worldPos.xyz / worldPos.w;
+}
+
+void main()
+{
+    vec4 color = texture2D(TEXTURE_0, uv);
+    float depth = texture2D(TEXTURE_2, uv).r;
+
+    float blurDistance = EXTRA_VECTOR1.x > 0.0 ? EXTRA_VECTOR1.x : 12.0;
+    float radius = EXTRA_VECTOR1.y > 0.0 ? EXTRA_VECTOR1.y : 3.0;
+
+    // 不需要渐变：小于阈值完全清晰，达到阈值后直接模糊
+    bool shouldBlur = depth > 0.999;
+    if (!shouldBlur) {
+        highp vec3 worldPos = getWorldPos(uv, depth);
+        shouldBlur = length(worldPos) >= blurDistance;
+    }
+    if (!shouldBlur) {
+        gl_FragColor = color;
+        return;
+    }
+
+    vec2 texel = EXTRA_VECTOR4.zw;
+    if (texel.x <= 0.0 || texel.y <= 0.0) {
+        texel = vec2(1.0 / 1280.0, 1.0 / 720.0);
+    }
+
+    vec2 offset = texel * radius;
+    vec2 halfOffset = offset * 0.5;
+
+    // 8-tap 近似高斯核：中心 4 + 十字 2*4 + 对角 1*4
+    vec3 sum = color.rgb * 4.0;
+    sum += texture2D(TEXTURE_0, uv + vec2( halfOffset.x, 0.0)).rgb * 2.0;
+    sum += texture2D(TEXTURE_0, uv + vec2(-halfOffset.x, 0.0)).rgb * 2.0;
+    sum += texture2D(TEXTURE_0, uv + vec2(0.0,  halfOffset.y)).rgb * 2.0;
+    sum += texture2D(TEXTURE_0, uv + vec2(0.0, -halfOffset.y)).rgb * 2.0;
+    sum += texture2D(TEXTURE_0, uv + offset).rgb;
+    sum += texture2D(TEXTURE_0, uv + vec2(-offset.x,  offset.y)).rgb;
+    sum += texture2D(TEXTURE_0, uv - offset).rgb;
+    sum += texture2D(TEXTURE_0, uv + vec2( offset.x, -offset.y)).rgb;
+
+    gl_FragColor = vec4(sum / 16.0, color.a);
+}

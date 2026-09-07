@@ -2,3 +2,9 @@ item.roninexample:pistol.name=M1911
 item.roninexample:bolt.name=SMLE MKⅢ
 item.roninexample:sniper.name=SMLE MKⅢ 狙击手
 item.roninexample:auto.name=MP18
+
+slot.bayonet.name=刺刀
+slot.fov_scale.name=视野缩放
+slot.fov1_5x.name=1.5 倍
+slot.fov2x.name=2 倍
+slot.appearance.name=外观

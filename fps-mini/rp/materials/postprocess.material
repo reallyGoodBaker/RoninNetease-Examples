@@ -54,5 +54,33 @@
             "DisableDepthTest"
         ],
         "msaaSupport": "Both"
+    },
+    "fullscreen_depth_blur": {
+        "vertexShader": "shaders/uv_fullscreen.vertex",
+        "fragmentShader": "shaders/glsl/fullscreen_depth_blur.fragment",
+        "vertexFields": [
+            {
+                "field": "Position"
+            },
+            {
+                "field": "UV0"
+            }
+        ],
+        "samplerStates": [
+            {
+                "samplerIndex": 0,
+                "textureWrap": "Clamp",
+                "textureFilter": "Bilinear"
+            },
+            {
+                "samplerIndex": 2,
+                "textureWrap": "Clamp",
+                "textureFilter": "Point"
+            }
+        ],
+        "states": [
+            "DisableDepthTest"
+        ],
+        "msaaSupport": "Both"
     }
 }

@@ -3,670 +3,38 @@ import math
 
 from ..engine.architect.compact import (
     ClientSubsystem, SubsystemClient,
-    Asset, Async, wait, localPlayerId,
+    Asset, localPlayerId,
     LevelClient, getOrCreateComponent,
+    getOrCreateSingletonComponent,
     compClient, clientApi,
-    TimerAdapter, addTimer, cancelTimer,
+    addTimer,
     epsilon,
 )
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
-from ..engine.architect.fsm.stateTree.common import StateTree, StateNode
 from ..engine.architect.utils.persona.client import PersonaRendererComponent
 
 from mod.common.minecraftEnum import OptionId
 
 
+from .gunBasic import GunBasic, GunState
+from .stats import stats
 from .shootVfx import PlayerShooterVfxSystem
 from .bullet import ClientBulletSystem
-from .render import WeaponRenderSystem, registerWeaponAnimations
-
-
-class GunState:
-    Hold = 0
-    Firing = 1
-    Reloading = 2
-    Cycling = 3
-
-
-class GunAutoState:
-    Full = 0
-    Semi = 1
-
-
-class GunBasic(object):
-
-    firingDuration = 0
-    shootSpread = 0
-
-    def __init__(self, asset):
-        # type: (Asset) -> None
-        asset = asset.duplicated()
-        level = LevelClient.getInstance()
-        self.cam = level.camera
-        self.audio = level.customAudio
-        self.animEx = getOrCreateComponent(localPlayerId(), AnimationExComponent)
-        self.vfxSystem = PlayerShooterVfxSystem.getInstance()
-        self.bulletSystem = ClientBulletSystem.getInstance()
-
-        self.bolt = asset['bolt']
-        self.trigger = asset['trigger']
-        self.feed = asset['feed']
-        self.barrel = asset['barrel']
-        self.handling = asset['handling']
-        self.features = asset['features']
-        self.slots = asset['slots']
-        self.extra = asset['extra']
-        self.boltCycleMode = self.bolt['cycleMode']
-        self.isFullAuto = self.trigger.get('isFullAuto')
-
-        self.recoilX, self.recoilY = self.bolt['recoil']
-        self.triggerDelay = self.trigger['delay']
-        self.magazineCapacity = self.feed['magazineCapacity']
-        self.velocityModifier = self.barrel['velocityModifier']
-        self.maxSpread = self.barrel['maxSpread']
-        self.spreadIncreasePerShot = self.barrel['spreadIncreasePerShot']
-        self.speedModifier = self.handling['speedModifier']
-        self.adsInTime = self.handling['adsInTime']
-        self.adsOutTime = self.handling['adsOutTime']
-        self.sprintToFireTime = self.handling['sprintToFireTime']
-
-        self.bulletCount = self.magazineCapacity
-        self.attachments = {}
-        self.bullet = None
-        self.firedCase = False
-        self.boltOpend = False
-        self.pressingTrigger = False
-        self.isFiring = False
-        self.actionToken = 0
-        self.boltCloseTimer = None
-        self.curState = GunState.Hold
-        self.aiming = False
-        self.reloadTimer = None
-        self.reloadToken = 0
-        self.reloadAnimKey = None
-        self.reloadBuffered = False
-        self.fireBuffered = False
-        self.canCycle = True
-        self.safe = False
-        self.autoMode = self.bolt['disconnector'] in ('enable', 'switch') and GunAutoState.Semi or GunAutoState.Full
-        self.stun = None
-
-    @Async
-    def wait(self, sec):
-        ftr = wait(sec)
-        self.stun = ftr
-        yield ftr
-        self.stun = None
-
-
-    def isManuallyCyclingBolt(self):
-        return self.boltCycleMode == 'manual' and self.curState == GunState.Cycling
-
-
-    def isWaiting(self):
-        return self.stun is not None
-
-
-    def changeSafeState(self, bool=True):
-        if self.curState == GunState.Hold:
-            self.safe = bool
-
-
-    def changeAutoMode(self, autoMode):
-        disconnector = self.bolt['disconnector']
-        if disconnector == 'switch':
-            self.autoMode = autoMode
-            return autoMode
-
-        if disconnector == 'none':
-            self.autoMode = GunAutoState.Full
-            return GunAutoState.Full
-        
-        if disconnector == 'enable':
-            self.autoMode = GunAutoState.Semi
-            return GunAutoState.Semi
-
-
-    def canOperate(self):
-        return self.curState not in (GunState.Firing, GunState.Cycling) and not self.isWaiting()
-    
-
-    def canReload(self):
-        return self.curState == GunState.Hold and not self.isWaiting()
-
-
-    def applyBullet(self, uri):
-        if not self.canOperate():
-            return
-        if uri in self.feed['ammoType']:
-            self.bullet = Asset(uri).load(True)
-            self.curState = GunState.Hold
-            if not self.bolt:
-                raise ValueError('Bullet should not be "None"')
-
-
-    def changeFullAuto(self, fullAuto=True):
-        if not self.canOperate():
-            return
-        self.isFullAuto = fullAuto
-        self.curState = GunState.Hold
-
-
-    @Async
-    def pressTrigger(self):
-        if not self.canOperate() or self.safe:
-            return
-        token = self.actionToken
-
-        if self.trigger['fireMode'] != 'burst':
-            if self.bulletCount <= 0:
-                # 子弹打空后左键只播空仓/空膛音
-                self.tryFireBullet()
-                return
-            # firedCase 检测栓动/泵动有没有退空弹
-            # boltOpend 检测是不是空挂
-            if self.firedCase or self.boltOpend:
-                self.cycleBolt()
-                return
-            self.isFiring = True
-            self.curState = GunState.Firing
-            yield self.wait(self.triggerDelay)
-            if token != self.actionToken:
-                return
-            self.pressingTrigger = True
-            self.tryFireBullet()
-            self.curState = GunState.Hold
-            return
-
-        self.pressingTrigger = True
-        self.isFiring = True
-        burstCount = self.trigger.get('burstCount', 1)
-        everySpan = self.triggerDelay / burstCount
-        for _ in range(burstCount):
-            yield self.wait(everySpan)
-            if token != self.actionToken:
-                return
-            self.tryFireBullet()
-        self.isFiring = False
-        self.curState = GunState.Hold
-
-
-    def releaseTrigger(self):
-        self.pressingTrigger = False
-
-
-    @Async
-    def cycleBolt(self):
-        """
-        这里的manual指的是自动/半自动武器是否手动拉枪机
-        """
-        if self.curState in (GunState.Cycling, GunState.Reloading):
-            return
-
-        token = self.actionToken
-        self.curState = GunState.Cycling
-        animEx = self.animEx
-        isManualCycle = self.bolt['cycleMode'] == 'manual'
-        animLayer = isManualCycle and 'default' or 'bolt'
-
-        if not self.boltOpend:
-            animEx.play(
-                self.bolt['boltOpenAnim'],
-                animLayer
-            )
-            yield self.wait(self.bolt['boltOpenTime'])
-            if token != self.actionToken:
-                return
-            self.boltOpend = True
-            # 实际上子弹只会在枪机打开时抛出，不管子弹有没有被射击过
-            self.dropCasing()
-
-            # 拉栓过程中预输入了换弹：枪机一拉开就直接进入换弹，
-            # 不要再闭锁后再拉开一次，避免浪费下一发。
-            if self.reloadBuffered:
-                self.reloadBuffered = False
-                self.isFiring = False
-                self.curState = GunState.Hold
-                self.reload()
-                return
-
-        isEmpty = self.bulletCount <= 0
-        if not isEmpty:
-            # 在有余弹的时候才会退出空弹，因为在全部子弹都退出时枪内没有上膛的子弹
-            self.firedCase = False
-
-        if isEmpty and self.bolt['holdOpenOnEmpty']:
-            # 允许空挂的时候不应该让枪机闭合
-            self.isFiring = False
-            self.curState = GunState.Hold
-            if self.reloadBuffered and self.canReload():
-                self.reloadBuffered = False
-                self.reload()
-            return
-
-        animEx.play(
-            self.bolt['boltCloseAnim'],
-            animLayer
-        )
-        yield self.wait(self.bolt['boltCloseTime'])
-        if token != self.actionToken:
-            return
-        self.boltOpend = False
-        self.curState = GunState.Hold
-
-        # 如果拉栓/闭锁过程中预输入了换弹，闭锁完成后进入换弹
-        if self.reloadBuffered and self.canReload():
-            self.reloadBuffered = False
-            self.isFiring = False
-            self.reload()
-            return
-
-        if not isManualCycle and not isEmpty        \
-            and self.autoMode == GunAutoState.Full  \
-            and self.pressingTrigger:
-            self._fireBullet()
-        else:
-            self.isFiring = False
-
-
-    @Async
-    def tryFireBullet(self):
-        if self.bulletCount <= 0:
-            emptyFireSound = self.bolt['emptyFireSound']
-            emptyFireSound and self.audio.PlayCustomUIMusic(emptyFireSound)
-            return False
-        self._fireBullet()
-        return True
-
-
-    SPREAD_FUNC = {
-        'OneMinus': lambda s, x: 1 - math.exp(-s * x),
-        'Native': lambda s, x: math.exp(-s * x)
-    }
-
-
-    def calcSpread(self):
-        spreadConf = self.bolt['spread']
-        strength = spreadConf['strength']
-        maxSpread = spreadConf['maxSpread']
-        minSpread = spreadConf['minSpread']
-        dSpread = GunBasic.SPREAD_FUNC[spreadConf['fnType']](strength, self.firingDuration)
-        scale = maxSpread - minSpread
-        self.shootSpread = dSpread * scale + minSpread
-
-
-    @Async
-    def _fireBullet(self):
-        # TODO: shoot bullet
-        self.interruptReloading()
-        self.isFiring = True
-        token = self.actionToken
-        boltConf = self.bolt
-        self.vfxSystem.shootCamVfx(
-            boltConf['fireSound'],
-            boltConf['recoil'],
-        )
-        self.bulletSystem.createBulletFromFacing(
-            self.bullet, self.velocityModifier, self.vfxSystem.applySpreadOffset()
-        )
-        self.calcSpread()
-        self.animEx.play(self.features['shoot']['animation'], replay=True, noBlending=True)
-        self.firedCase = True
-
-        if self.bolt['cycleMode'] == 'manual':
-            yield self.wait(self.bolt['shootRestoreTime'])
-            if token != self.actionToken:
-                self.isFiring = False
-                return
-            if not self.canCycle:
-                self.isFiring = False
-                return
-
-        self.cycleBolt()
-
-
-    def findAmmoCountInInv(self, itemType):
-        # TODO: 返回背包中具体的子弹数量
-        return 50
-    
-
-    def consumeBullets(self, itemType, count):
-        # TODO: 消耗count个子弹，但有可能背包没这么多子弹，所以消耗后返回具体消耗数量
-        return count
-    
-
-    def fillBullet(self, itemType, count):
-        consumed = self.consumeBullets(itemType, count)
-        self.bulletCount += consumed
-        return consumed
-
-
-    def interruptReloading(self):
-        self.reloadToken += 1
-        self.fireBuffered = False
-        if self.reloadTimer:
-            self.reloadTimer.cancel()
-            self.reloadTimer = None
-        if self.reloadAnimKey:
-            self.animEx.stop(self.reloadAnimKey)
-            self.reloadAnimKey = None
-        self.canCycle = True
-        if self.curState == GunState.Reloading:
-            self.curState = GunState.Hold
-
-
-    def cancelAll(self):
-        # 取消旧武器所有异步协程/定时器，避免切枪后残留逻辑覆盖新武器 draw
-        self.actionToken += 1
-        self.interruptReloading()
-        if self.boltCloseTimer:
-            cancelTimer(self.boltCloseTimer)
-            self.boltCloseTimer = None
-        self.isFiring = False
-        self.pressingTrigger = False
-        self.stun = None
-        self.curState = GunState.Hold
-
-
-    def shouldUseCupPortBoltOpen(self):
-        return not self.firedCase and self.bulletCount
-    
-
-    def dropCasing(self):
-        self.firedCase = False
-        if self.bulletCount > 0:
-            self.bulletCount -= 1
-            self.vfxSystem.dropEmptyBullet(
-                self.bullet['modelAsset']['casingEntity'],
-                self.bolt['ejectVelocity']
-            )
-
-
-    @Async
-    def reload(self):
-        if self.bulletCount >= self.magazineCapacity or self.reloadTimer:
-            return
-
-        self.reloadToken += 1
-        token = self.reloadToken
-        self.reloadBuffered = False
-        self.fireBuffered = False
-        self.isFiring = False
-        self.canCycle = False
-        self.curState = GunState.Reloading
-        count = 0
-        bulletItemType = self.bullet.get('itemType')
-        isManual = self.bolt['cycleMode'] == 'manual'
-
-        for ammoAssetId in self.feed['ammoType']:
-            ammoId = Asset(ammoAssetId).load(True)['itemType']
-            if ammoId != bulletItemType:
-                continue
-            count = self.findAmmoCountInInv(ammoId)
-            if count > 0:
-                break
-        if count <= 0:
-            self.canCycle = True
-            self.curState = GunState.Hold
-            return
-
-        reloadMode = self.findProperReloadMode()
-        if not reloadMode:
-            self.canCycle = True
-            self.curState = GunState.Hold
-            return
-
-        if isManual and not self.boltOpend:
-            shouldUseCupPortBoltOpen = self.shouldUseCupPortBoltOpen()
-            self.animEx.play(
-                shouldUseCupPortBoltOpen                \
-                    and self.bolt['cuppedPortOpenBolt'] \
-                    or self.bolt['boltOpenAnim'],
-            )
-            yield self.wait(
-                shouldUseCupPortBoltOpen                \
-                    and self.bolt['cuppedPortOpenTime'] \
-                    or self.bolt['boltOpenTime']
-            )
-            if token != self.reloadToken:
-                return
-            self.boltOpend = True
-            shouldUseCupPortBoltOpen or self.dropCasing()
-
-        self.reloadAnimKey = reloadMode['animation']
-        self.animEx.play(reloadMode['animation'], replay=True)
-
-        def doReload():
-            if token != self.reloadToken:
-                return
-            if self.reloadTimer:
-                self.reloadTimer.cancel()
-                self.reloadTimer = None
-            self.reloadAnimKey = None
-
-            reloadType = reloadMode['reloadType']
-            remains = count - self.fillBullet(
-                bulletItemType,
-                reloadType == 'replace' and self.magazineCapacity - self.bulletCount\
-                    or reloadType == 'add' and 1 or reloadMode['countPerClip']
-            )
-            self.canCycle = True
-
-            # 玩家预输入了射击：装完当前这个阶段就打断后续装填
-            if self.fireBuffered and isManual:
-                self.fireBuffered = False
-                if self.boltOpend:
-                    def restoreBolt():
-                        self.fireBuffered = False
-                        self.boltOpend = False
-                        self.firedCase = False
-                        self.curState = GunState.Hold
-                    self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
-                    self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
-                else:
-                    self.curState = GunState.Hold
-                return
-
-            if self.bulletCount < self.magazineCapacity and remains > 0:
-                self.reload()
-                return
-
-            if self.boltOpend:
-                def restoreBolt():
-                    self.boltOpend = False
-                    self.firedCase = False
-                    self.curState = GunState.Hold
-
-                self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
-                self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
-            else:
-                self.curState = GunState.Hold
-
-        self.reloadTimer = TimerAdapter(reloadMode['reloadTime'], doReload, False)
-        self.reloadTimer.start()
-
-
-    def findProperReloadMode(self):
-        remains = self.bulletCount
-        capacity = self.magazineCapacity
-        for mode in self.feed['reloadModes']:
-            condition = mode['condition']
-            if remains == 0 and condition == 'empty':
-                return mode
-            if 0 < remains < capacity and condition == 'not_full':
-                return mode
-            if condition == 'clip_available':
-                countPerClip = mode['countPerClip']
-                if capacity - remains >= countPerClip and capacity > countPerClip:
-                    return mode
-        return None
-
-
-
-
-
-class PostureState:
-    Idle = 'idle'
-    Aiming = 'aiming'
-    Sprinting = 'sprinting'
-    Reloading = 'reloading'
-    Firing = 'firing'
-
-
-class ShooterState:
-    Sneaking = 0
-    Idle = 1
-    Moving = 2
-    Jumping = 3
-
-
-class NativeMinecraftState(StateNode):
-
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        return tree.mapping.get('weaponName') is None
-
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        # 切回空手没有 draw，直接解除切枪锁
-        tree.isSwitchingWeapon = False
-
-
-class EquipAnyWeapon(StateNode):
-
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        return tree.mapping.get('weaponName') is not None
-
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        if previous in self.children:
-            return
-        weaponName = tree.mapping.get('weaponName')
-        registerWeaponAnimations(tree.animEx.entityId, weaponName)
-
-        # 切枪完成后播放新武器 draw
-        if tree.pendingDrawKey:
-            drawKey = tree.pendingDrawKey
-            tree.currentDrawKey = drawKey
-            tree.animEx.play(drawKey, replay=True)
-            tree.pendingDrawKey = None
-            duration = tree._getAnimDuration(tree.animEx, drawKey)
-            addTimer(duration, lambda: tree._finishWeaponSwitch(tree.changeToken), False)
-
-
-class FiringState(StateNode):
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        return tree.weapon is not None and tree.weapon.isFiring
-
-    def canExit(self, tree):
-        # type: (ShooterSystem) -> None
-        # 手动枪机拉栓过程中只能被换弹打断，不能被奔跑/待机打断
-        if tree.weapon.isManuallyCyclingBolt():
-            return not tree.weapon.isFiring
-        return not tree.weapon.isFiring or tree.player.isSprinting()
-    
-    def exit(self, next, tree):
-        tree.weapon.firingDuration = 0
-
-    def update(self, tree):
-        # type: (ShooterSystem) -> None
-        tree.weapon.firingDuration += tree.frameTime
-        if not tree.weapon.isFiring:
-            tree.finishTasks()
-
-
-class SprintingState(StateNode):
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        return tree.player.isSprinting()
-    
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        # print 'Sprinting'
-        tree.stopAiming()
-        tree.weapon.isFiring = False
-        tree.weapon.curState = GunState.Hold
-        tree.weapon.shootSpread = 0
-        # 切枪 draw 还没播完时，不播奔跑动画，避免把拔枪动画顶掉
-        if not tree.isSwitchingWeapon:
-            tree.animEx.play(tree.movementFeature['sprintAnim'])
-        tree.weapon.interruptReloading()
-        tree.weapon.canCycle = False
-
-    def exit(self, next, tree):
-        tree.weapon.canCycle = True
-
-
-class ReloadingState(StateNode):
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        return tree.weapon is not None and tree.weapon.curState == GunState.Reloading
-    
-    def canExit(self, tree):
-        # type: (ShooterSystem) -> None
-        # 只要已经不在换弹状态（被打断/完成）就允许退出，避免手动枪机“装一发打一发”卡在换弹状态
-        return tree.weapon.feed['canInterrupt'] or tree.weapon.curState != GunState.Reloading
-    
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        tree.weapon.shootSpread = 0
-        if not tree.weapon.feed['canInterrupt']:
-            tree.operation.SetCanWalkMode(False)
-        # print 'Reloading'
-
-    def exit(self, next, tree):
-        tree.operation.SetCanWalkMode(True)
-
-    def update(self, tree):
-        # type: (ShooterSystem) -> None
-        if tree.weapon is not None and tree.weapon.curState == GunState.Hold:
-            tree.finishTasks()
-
-
-class IdleState(StateNode):
-    def canEnter(self, tree):
-        # type: (ShooterSystem) -> None
-        # 瞄准只是变量，不再作为独立状态，因此 Idle 不检查 aiming
-        return not tree.player.isSprinting()
-    
-    def canExit(self, tree):
-        # type: (ShooterSystem) -> None
-        return not tree.weapon.isManuallyCyclingBolt()
-
-    def enter(self, previous, tree):
-        # type: (StateNode, ShooterSystem) -> None
-        # print 'Idle'
-        # 拉栓中保持 curState=Cycling，不打断 cycleBolt 协程
-        if tree.weapon.curState != GunState.Cycling:
-            tree.weapon.curState = GunState.Hold
-
-        # 切枪 draw 还没播完时，不播 hold，避免把拔枪动画顶掉
-        if tree.isSwitchingWeapon:
-            return
-
-        # 如果当前正在播放的是换弹动画（feed 里的 reloadModes），就不播 hold
-        for reloadMode in tree.weapon.feed.get('reloadModes', []):
-            animKey = reloadMode.get('animation')
-            if animKey and tree.animEx.isPlaying(animKey):
-                return
-
-        tree.animEx.play(tree.movementFeature['walkAnim'])
-
-    def update(self, tree):
-        tree.idleDuration += tree.frameTime
-
-    def exit(self, next, tree):
-        tree.idleDuration = 0
+from .render import WeaponRenderSystem
+from .feature import LocalFeaturesComponent
+from .stateTree import (
+    ShooterStateTreeComponent,
+    PostureState,
+    ShooterState,
+)
 
 
 @SubsystemClient
-class ShooterSystem(ClientSubsystem, StateTree):
+class ShooterSystem(ClientSubsystem):
 
     def __init__(self, system, engine, sysName):
         ClientSubsystem.__init__(self, system, engine, sysName)
-        StateTree.__init__(self, localPlayerId())
+        self.stateTree = None
 
 
     frameTime = epsilon
@@ -682,11 +50,40 @@ class ShooterSystem(ClientSubsystem, StateTree):
     pendingWeaponName = None
     switchPhase = None
     isSwitchingWeapon = False
+    gunSmithingRequested = False
 
 
     def resetContext(self):
         self.switchNode(self.root)
         self.aiming = False
+
+    # StateTree 转发：ShooterSystem 自身不再继承 StateTree，
+    # 统一把状态树 API 转发到 ShooterStateTreeComponent。
+    def finishTasks(self):
+        if self.stateTree:
+            self.stateTree.finishTasks()
+
+    def execute(self):
+        if self.stateTree:
+            self.stateTree.execute()
+
+    def switchNode(self, node):
+        if self.stateTree:
+            self.stateTree.switchNode(node)
+
+    def currentStateName(self):
+        return self.stateTree.currentStateName() if self.stateTree else None
+
+    def currentState(self):
+        return self.stateTree.currentState() if self.stateTree else None
+
+    @property
+    def root(self):
+        return self.stateTree.root if self.stateTree else None
+
+    @property
+    def mapping(self):
+        return self.stateTree.mapping if self.stateTree else {}
 
 
     def onInit(self):
@@ -701,18 +98,41 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.player = compClient.CreatePlayer(localId)
         self.persona = getOrCreateComponent(localId, PersonaRendererComponent)
         self.animEx = getOrCreateComponent(localId, AnimationExComponent)
+        # The item currently bound to self.weapon; used to apply server state.
+        self.currentItemName = None
+        self.currentUid = ''
+        # When a gun is selected but the server state has not arrived yet, keep
+        # the weapon hidden until GunClientSync delivers the state.
+        self.pendingServerWeaponName = None
+        self.pendingServerItemName = None
+        self.pendingUid = None
 
+
+    def resetSessionCache(self):
+        # type: () -> None
+        """Clear client-side session cache when entering a fresh world/save."""
+        self.currentItemName = None
+        self.currentUid = ''
+        self.pendingServerWeaponName = None
+        self.pendingServerItemName = None
+        self.pendingUid = None
 
     def onReady(self):
         self.shooterVfx = PlayerShooterVfxSystem.getInstance()
         self.bullets = ClientBulletSystem.getInstance()
+        self.featuresComponent = getOrCreateSingletonComponent(LocalFeaturesComponent)
 
-        self.createNode(NativeMinecraftState, 'native')
-        armedNode = self.createNode(EquipAnyWeapon, 'armed') # type: EquipAnyWeapon
-        self.createNode(SprintingState, PostureState.Sprinting, armedNode)
-        self.createNode(ReloadingState, PostureState.Reloading, armedNode)
-        self.createNode(FiringState, PostureState.Firing, armedNode)
-        self.createNode(IdleState, PostureState.Idle, armedNode)
+        # 状态树从 ShooterSystem 中拆出，放到轻量 Component 上。
+        self.stateTree = getOrCreateComponent(localPlayerId(), ShooterStateTreeComponent)
+        self.stateTree.bindOwner(self)
+
+        self.stateTree.buildDefaultTree()
+
+
+    def hasFeature(self, name):
+        if not self.weapon:
+            return False
+        return self.featuresComponent.hasFeature(name)
 
 
     def recordAimingTime(self, dt):
@@ -743,15 +163,34 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.recordAimingTime(dt)
 
 
-    def changeWeapon(self, weaponName=None):
+    def changeWeapon(self, weaponName=None, itemName=None, serverReady=False, ammoCount=None, uid=None):
+        # If the gun was selected but the server has not returned its state yet,
+        # hide the weapon and wait for GunClientSyncSystem.applyServerGunState().
+        if weaponName and not serverReady:
+            self.pendingServerWeaponName = weaponName
+            self.pendingServerItemName = itemName
+            self.pendingUid = uid
+            self.changeToken += 1
+            token = self.changeToken
+            self._finishChangeWeapon(None, token, None, None)
+            return
+
+        # A real weapon switch is allowed now; clear any server-wait state.
+        self.pendingServerWeaponName = None
+        self.pendingServerItemName = None
+        self.pendingUid = None
+
         # 已经在切枪流程中
         if self.isSwitchingWeapon:
             if self.switchPhase in ('holster', 'draw_reverse'):
                 # holster / 反向 draw 途中再次切枪：不重新播，只更新目标武器
                 self.pendingWeaponName = weaponName
+                self.pendingItemName = itemName
+                self.pendingAmmoCount = ammoCount
+                self.pendingUid = uid
                 return
             if self.switchPhase == 'draw':
-                self._interruptDrawSwitch(weaponName)
+                self._interruptDrawSwitch(weaponName, itemName, ammoCount, uid)
                 return
 
         self.changeToken += 1
@@ -759,34 +198,40 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.isSwitchingWeapon = True
         self.switchPhase = 'holster'
         self.pendingWeaponName = weaponName
+        self.pendingItemName = itemName
+        self.pendingAmmoCount = ammoCount
+        self.pendingUid = uid
         self.currentDrawKey = None
 
         self.aiming = False
         if self.weapon:
             self.weapon.aiming = False
             self.weapon.cancelAll()
-        self.shooterVfx.stopAiming()
+        self.hasFeature('aim') and self.shooterVfx.stopAiming(self.weapon)
 
         oldWeapon = self.weapon
         holsterKey = None
         if oldWeapon:
-            holsterKey = oldWeapon.features.get('movement', {}).get('holster')
+            holsterKey = oldWeapon.modify(stats.animHolster)
 
         # 旧武器先播 holster，播完再切渲染资源和 draw
         if oldWeapon and holsterKey:
             oldWeapon.animEx.play(holsterKey, replay=True)
             duration = self._getAnimDuration(oldWeapon.animEx, holsterKey)
-            addTimer(duration, lambda: self._finishChangeWeapon(self.pendingWeaponName, token), False)
+            addTimer(duration, lambda: self._finishChangeWeapon(self.pendingWeaponName, token, self.pendingItemName, self.pendingAmmoCount, self.pendingUid), False)
             return
 
-        self._finishChangeWeapon(weaponName, token)
+        self._finishChangeWeapon(weaponName, token, itemName, ammoCount, uid)
 
 
-    def _interruptDrawSwitch(self, weaponName):
+    def _interruptDrawSwitch(self, weaponName, itemName=None, ammoCount=None, uid=None):
         # 当前正在播 draw，再次切枪：反向播放当前 draw，然后切到新武器
         self.changeToken += 1
         token = self.changeToken
         self.pendingWeaponName = weaponName
+        self.pendingItemName = itemName
+        self.pendingAmmoCount = ammoCount
+        self.pendingUid = uid
 
         drawKey = self.currentDrawKey
         progress = 0.0
@@ -799,22 +244,36 @@ class ShooterSystem(ClientSubsystem, StateTree):
         if progress > 0.01:
             self.switchPhase = 'draw_reverse'
             self.animEx.play(drawKey, replay=True, playRate=-1, startOffset=progress)
-            addTimer(progress, lambda: self._finishChangeWeapon(self.pendingWeaponName, token), False)
+            addTimer(progress, lambda: self._finishChangeWeapon(self.pendingWeaponName, token, self.pendingItemName, self.pendingAmmoCount, self.pendingUid), False)
             return
 
-        self._finishChangeWeapon(weaponName, token)
+        self._finishChangeWeapon(weaponName, token, itemName, ammoCount, uid)
 
 
-    def _finishChangeWeapon(self, weaponName, token):
+    def _applyServerStateIfReady(self):
+        # type: () -> None
+        """Apply canonical server state after the new weapon is actually built."""
+        try:
+            from .gunClientSync import GunClientSyncSystem
+            sync = GunClientSyncSystem.getInstance()
+            state = sync.getCanonicalState()
+            if state and state.get('itemName') == self.currentItemName:
+                self.applyServerGunState(state, sync.getCurrentUid())
+        except Exception as errorObject:
+            print '[Shooter] apply server state exception:', repr(errorObject)
+
+    def _finishChangeWeapon(self, weaponName, token, itemName=None, ammoCount=None, uid=None):
         if token != self.changeToken:
             return
 
+        self.currentItemName = itemName
+        self.currentUid = uid or ''
         self.mapping['weaponName'] = weaponName
         self.aiming = False
         if self.weapon:
             self.weapon.aiming = False
             self.weapon.cancelAll()
-        self.shooterVfx.stopAiming()
+        self.hasFeature('aim') and self.shooterVfx.stopAiming(self.weapon)
 
         # 卸载旧武器动画注册
         self.animEx.clearRegisteredAnimations()
@@ -824,12 +283,15 @@ class ShooterSystem(ClientSubsystem, StateTree):
 
         renderSystem = WeaponRenderSystem.getInstance()
         if weaponName:
-            self.weapon = GunBasic(Asset('weapons.' + weaponName))
-            self.aimFeature = self.weapon.features.get('aim')
-            self.movementFeature = self.weapon.features.get('movement')
-            self.shootFeature = self.weapon.features.get('shoot')
+            asset = Asset('weapons.' + weaponName)
+            if not self.weapon:
+                self.weapon = GunBasic(asset, ammoCount)
+            else:
+                self.weapon.resetTo(asset, ammoCount)
             self.weapon.applyBullet(self.weapon.feed['ammoType'][0])
-            self.pendingDrawKey = self.movementFeature.get('draw')
+            self.weapon.setAmmoChangeCallback(self._onAmmoChanged)
+            self._applyServerStateIfReady()
+            self.pendingDrawKey = self.weapon.modify(stats.animDraw)
             if not self.pendingDrawKey:
                 self.isSwitchingWeapon = False
                 self.switchPhase = None
@@ -840,10 +302,9 @@ class ShooterSystem(ClientSubsystem, StateTree):
             # 本地立即换渲染资源，同时通知服务器同步给其他客户端
             renderSystem.sendServer('renderResource', { 'entity': localPlayerId(), 'uri': weaponName })
         else:
+            # 切回空手时清除枪械 feature，并摘除动态挂载的 feature 状态节点
+            self.featuresComponent.clear()
             self.weapon = None
-            self.aimFeature = None
-            self.movementFeature = None
-            self.shootFeature = None
             self.pendingDrawKey = None
             self.currentDrawKey = None
             self.switchPhase = None
@@ -854,11 +315,58 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.finishTasks()
 
 
+    def _onAmmoChanged(self, ammoCount):
+        # type: (int) -> None
+        if not self.currentItemName or not self.currentUid:
+            return
+        try:
+            from .gunClientSync import GunClientSyncSystem
+            GunClientSyncSystem.getInstance().requestSetAmmoCount(ammoCount)
+        except Exception as errorObject:
+            pass
+
+
+    def applyServerGunState(self, state, uid=None):
+        # type: (dict, str | None) -> bool
+        """Apply server-stored ammo to the currently held gun when state arrives."""
+        stateItemName = state.get('itemName')
+        if self.pendingServerWeaponName and self.pendingServerItemName == stateItemName:
+            weaponName = self.pendingServerWeaponName
+            itemName = self.pendingServerItemName
+            savedAmmo = state.get('ammoCount')
+            ammoCount = savedAmmo if savedAmmo is not None and savedAmmo >= 0 else None
+            self.pendingServerWeaponName = None
+            self.pendingServerItemName = None
+            self.changeWeapon(weaponName, itemName, True, ammoCount, uid)
+            attachments = state.get('attachments')
+            if isinstance(attachments, dict) and self.weapon:
+                self.weapon.applyServerAttachments(attachments)
+            return True
+
+        if not self.weapon:
+            return False
+        if stateItemName != self.currentItemName:
+            return False
+        if uid:
+            self.currentUid = uid
+        attachments = state.get('attachments')
+        if isinstance(attachments, dict):
+            self.weapon.applyServerAttachments(attachments)
+
+        ammoCount = state.get('ammoCount')
+        if ammoCount is None or ammoCount < 0:
+            return False
+        capacity = self.weapon.modify(stats.magazineCapacity)
+        self.weapon.bulletCount = max(0, min(capacity, int(ammoCount)))
+        return True
+
+
     def _getAnimDuration(self, animEx, animKey):
         info = animEx.getPlayingAnimation(animKey)
         if info and info.duration and info.duration < 1000:
             return info.duration
         return 0.3
+
 
     def _finishWeaponSwitch(self, token):
         if token != self.changeToken:
@@ -869,8 +377,8 @@ class ShooterSystem(ClientSubsystem, StateTree):
         # 如果拔枪动画播完后玩家还在奔跑，补播奔跑动画
         if self.player.isSprinting() \
                 and self.currentStateName() == PostureState.Sprinting \
-                and self.movementFeature:
-            self.animEx.play(self.movementFeature['sprintAnim'])
+                and self.hasFeature('sprint'):
+            self.currentState()._playSprintEnter(self.stateTree)
 
 
     """
@@ -906,7 +414,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
             return
         if self.currentStateName() == PostureState.Sprinting:
             return
-        if not self.weapon or not self.aimFeature:
+        if not self.weapon or not self.hasFeature('aim'):
             return
         # 换弹中不能瞄准
         if self.weapon.curState == GunState.Reloading:
@@ -917,10 +425,12 @@ class ShooterSystem(ClientSubsystem, StateTree):
         # 瞄准只是变量，不再作为独立状态
         self.aiming = True
         self.weapon.aiming = True
-        self.shooterVfx.startAiming(self.aimFeature)
+        self.shooterVfx.startAiming(self.weapon)
 
 
     def stopAiming(self):
+        if not self.hasFeature('aim'):
+            return
         if self.isSwitchingWeapon:
             return
         self.aiming = False
@@ -929,7 +439,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
             # 拉栓中保留 curState=Cycling；换弹中也不能重置为 Hold
             if self.weapon.curState not in (GunState.Cycling, GunState.Reloading):
                 self.weapon.curState = GunState.Hold
-        self.shooterVfx.stopAiming()
+        self.shooterVfx.stopAiming(self.weapon)
 
 
     def changeSprinting(self):
@@ -964,7 +474,7 @@ class ShooterSystem(ClientSubsystem, StateTree):
             return
         self.aiming = False
         self.weapon.aiming = False
-        self.shooterVfx.stopAiming()
+        self.hasFeature('aim') and self.shooterVfx.stopAiming(self.weapon)
         if self.weapon.canReload():
             self.sprintBannedRemains += 0.2
             self.weapon.reload()
@@ -980,13 +490,12 @@ class ShooterSystem(ClientSubsystem, StateTree):
     def updateMovementSpread(self):
         baseSpread = not self.attr.isEntityOnGround() and 1.5 or 0
         isMoving = self.player.isMoving()
-        movement = self.weapon.features.get('movement')
-        if movement:
-            baseSpread += isMoving and movement['spread'] or 0
+        if self.hasFeature('walk'):
+            baseSpread += isMoving and self.weapon.modify(stats.walkSpread) or 0
         self.shooterVfx.movementSpread = baseSpread
 
     def decaySpread(self):
-        decay = self.weapon.bolt['spread']['decay']
+        decay = self.weapon.barrel['spread']['decay']
         shootSpread = max(0, self.weapon.shootSpread - decay * math.log(self.idleDuration * decay + 1))
         self.shooterVfx.shootSpread = shootSpread
         self.weapon.shootSpread = shootSpread
@@ -997,3 +506,10 @@ class ShooterSystem(ClientSubsystem, StateTree):
         self.decayRecoil()
         self.updateMovementSpread()
         self.decaySpread()
+
+    def startGunSmith(self):
+        # 仅允许从 Idle 进入，避免在移动/换弹/射击/奔跑中打开改枪界面
+        if self.currentStateName() != PostureState.Idle or len(self.weapon.slots) == 0:
+            return
+        self.gunSmithingRequested = True
+        self.finishTasks()

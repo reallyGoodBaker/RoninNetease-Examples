@@ -26,16 +26,6 @@ Asset = {
             'value': [0, 0],
             'decay': [0, 0],
         },
-        # 枪机散布
-        'spread': {
-            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
-            'strength': 0.3,          # 枪机散布的强度 (这是非线性的，建议多调试)
-            'decay': 2,
-            'maxSpread': 1.5,
-            'minSpread': 0.2,
-        },
-        'fireSound': 'shoot.bolt',       # 射击音效，空字符串为不播放
-        'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         'ejectVelocity': (1.5, 3, 0), # 退弹时给子弹附加的速度
     },
 
@@ -70,46 +60,50 @@ Asset = {
     # 枪管组件 - 决定子弹初速和子弹散步
     'barrel': {
         'velocityModifier': 1.05,       # 子弹的 baseSpeed 乘以这个值就是出膛速度
-        'maxSpread': 1.0,               # 子弹的最大散布角度
-        'spreadIncreasePerShot': 0.1,   # 每次射击增加的散布角度
+        'spread': {
+            'fnType': 'OneMinus',   # 枪机散步的函数类型，'OneMinus' 是 1 - f(x), 'Native' 是 f(x), 普通枪械使用 'OneMinus', 机枪使用 ‘Native’
+            'strength': 0.3,          # 枪机散布的强度 (这是非线性的，建议多调试)
+            'decay': 2,
+            'maxSpread': 1.5,
+            'minSpread': 0.2,
+        },
     },
 
     # 操控性 - 影响玩家操纵手感
     'handling': {
+        'animHold': 'fp.hold',             # 持枪不动动画
         'speedModifier': 1.0,       # 移动速度倍率
-        'canJump': True,
-        'canSprint': True,
-        'adsInTime': 0.25,          # 进入开镜的时间
-        'adsOutTime': 0.25,         # 退出开镜的时间
+        'draw': 'fp.draw',
+        'holster': 'fp.holster',
         'sprintToFireTime': 0.2,    # 跑射延迟
-    },
-
-    # 更多 - 可以自定义处理
-    'extra': {
-        'slide': {                  # 滑铲射击配置, 这部分数据完全暴露，需要时直接获取
-            'canSlideShoot': True,
-            'slideToFireTime': 0.35,
-            'slideToADS_Time': 0.45,
-        }
+        'gunsmith': 'gunsmith',
     },
 
     # 功能 - 定义玩家控制项 (里面的功能由代码驱动)
     'features': {
         'shoot': {
-            'animation': 'fp.shoot'
+            'animation': 'fp.shoot',
+            'fireSound': 'shoot.bolt',       # 射击音效，空字符串为不播放
+            'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         },
         'aim': {     # 基础瞄准功能
-            'scale': 2.0,
+            'scale': 1,
             'camera': 'iron_sight',     # 瞄准时相机名称
             'modelScale': 0.5,            # 瞄准时z轴缩放
-            'ads': 0.2,
+            'adsIn': 0.3,
+            'adsOut': 0.2,
+            'vignette': 0.2,            # 暗角范围
+            'spreadMultiplier': 0.5,
         },
-        'movement': {   # 基础移动功能
-            'walkAnim': 'fp.hold',
-            'sprintAnim': 'fp.run',
-            'draw': 'fp.draw',
-            'holster': 'fp.holster',
+        'walk': {
+            'animation': '',
             'spread': 1,
+        },
+        'sprint': {
+            'cast': '',
+            'swing': '',
+            'animation': 'fp.run',
+            'sprintOutTime': 0.5,
         },
     },
 
@@ -117,23 +111,28 @@ Asset = {
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
         {
-            'category': 'muzzle',                # 槽位类型, 自由字符串, 用于匹配附件
-            'attachTo': 'muzzle_01',         # 绑定的骨骼名称
-            'offset': (0, 0, 0),             # 绑骨的偏移
-            'rotation': (0, 0, 0),           # 绑骨的旋转
-            'scale': 1.0                     # 绑骨的缩放
+            'slotId': 'bayonet',
+            'cameraAligned': 'view_bayonet',
+            'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
+            'category': 'bayonet',              # 槽位分类, 自由字符串
+            'displayName': 'slot.bayonet.name', # 槽位的名称，可以使用lang文件中的键
+            'control': 'attach_bayonet',
         },
         {
-            'category': 'optic',
-            'attachTo': 'optic_01',
+            'slotId': 'fovScale',
+            'attachmentAsset': 'attachments.fov1_5x',
+            'cameraAligned': 'camera',
+            'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
+            'category': 'fovScale',              # 槽位分类, 自由字符串
+            'displayName': 'slot.fov_scale.name', # 槽位的名称，可以使用lang文件中的键
         },
         {
-            'category': 'magazine',
-            'attachTo': 'mag_01',
+            'slotId': 'appearance',                     # 槽位 id，在当前武器应该为唯一
+            'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
+            'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
+            'attachmentAsset': 'attachments.appearance.smle_mk3',
+            'category': 'appearance',                   # 槽位分类, 自由字符串
+            'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
         },
-        {
-            'category': 'underbarrel',
-            'attachTo': 'underbarrel_01',
-        }
     ]
 }

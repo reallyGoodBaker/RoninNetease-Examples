@@ -11,5 +11,7 @@ Asset = {
     'fp.aim_shoot':     defaultInConf,
     'fp.reload':        defaultInConf,
     'fp.slideopen':     AnimationEasingConf(1, 0.02),
-    'fp.slideclose':     AnimationEasingConf(1, 0.05),
+    'fp.slideclose':    AnimationEasingConf(1, 0.05),
+    'fp.draw':          AnimationEasingConf(1, 0),
+    'fp.holster':       AnimationEasingConf(1, 0.2),
 }

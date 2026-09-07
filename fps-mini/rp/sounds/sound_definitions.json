@@ -18,6 +18,30 @@
             "sounds": [
                 "sounds/auto_shoot"
             ]
+        },
+        "indicator.kill": {
+            "category": "ui",
+            "sounds": [
+                "sounds/kill"
+            ]
+        },
+        "indicator.head_shot": {
+            "category": "ui",
+            "sounds": [
+                "sounds/head_shot"
+            ]
+        },
+        "indicator.cfhs": {
+            "category": "ui",
+            "sounds": [
+                "sounds/cfhs"
+            ]
+        },
+        "indicator.cfkill": {
+            "category": "ui",
+            "sounds": [
+                "sounds/cfkill"
+            ]
         }
     }
 }

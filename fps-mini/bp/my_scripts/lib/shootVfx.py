@@ -15,6 +15,8 @@ from ..engine.architect.math.double import alerp, lerp, clamp, random
 from ..engine.architect.math.utils import worldToViewDirection, worldToViewPoint, viewToWorld, screenSize
 from ..engine.architect.math.mat4 import Matrix, decompose
 
+from .stats import stats
+
 # TODO: Remove these imports
 from mod.client.component.posCompClient import PosComponentClient
 from mod.client.component.rotCompClient import RotComponentClient
@@ -36,8 +38,8 @@ isFirstPerson = QueryVariable('is_first_person')
 shakeScale = QueryVariable('shake_scale')
 walkScale = QueryVariable('walk_scale')
 controlPos = QVector3('control_pos')
-vSpeed = QueryVariable('v_speed')
 modelScale = QueryVariable('model_scale', 1)
+isAimingVar = QueryVariable('is_aiming', 0)
 
 
 class CrosshairController(object):
@@ -121,8 +123,8 @@ class CaseMovement(BaseCompClient):
 @SubsystemClient
 class PlayerShooterVfxSystem(ClientSubsystem):
 
-    aimingTransitionDuration = 0.0
-    aimingTotalTime = epsilon
+    camTransitionDuration = 0.0
+    camTotalTime = epsilon
     _crosshairAlpha = 1.0
     _crosshairVisible = False
     _recoil = (0, 0)
@@ -147,7 +149,6 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.zRotAdders = {} # type: dict[str, float]
         self.cameraShake = True
         self.animCamRot = [ 0, 0, 0 ]
-        self.vSpeed = 0
         self.lastY = None
         self.posComp = compClient.CreatePos(self.localId)
         self.modelZScale = 1
@@ -164,6 +165,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.lastVSmooth = 0
         self.vSmooth = 0
         self.cameraAligned = 'camera'
+        self._grounded = False
+        self._groundedTimer = 0.0
         self.camRot = rot
 
     _fovScale = 1.0
@@ -207,14 +210,16 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     def onUpdate(self, dt):
         self.updateCamRot()
 
-    def applySpreadOffset(self):
+    def applySpreadOffset(self, spreadMul):
         totalSpread = self.shootSpread + self.movementSpread
         _x, _y = (random(-1, 1), random(-1, 1))
         m = math.hypot(_x, _y)
         s = totalSpread / m
-        ox, oy = _x * s, _y * s
-        crosshairRot.x.setValue(self.localId, crosshairRot.x.getValue(self.localId) + ox)
-        crosshairRot.y.setValue(self.localId, crosshairRot.y.getValue(self.localId) + oy)
+        ox, oy = _x * s * spreadMul, _y * s * spreadMul
+        crx = crosshairRot.x.getValue(self.localId)
+        cry = crosshairRot.y.getValue(self.localId)
+        crosshairRot.x.setValue(self.localId, lerp(crx, crx - ox, 0.1))
+        crosshairRot.y.setValue(self.localId, lerp(cry, cry - oy, 0.1))
         return (ox, oy)
 
     def decayRecoil(self, decay):
@@ -232,7 +237,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self._recoil = (yaw, pitch)
 
     def onRender(self, dt):
-        t = dt * 25
+        t = 1 - math.exp(-25 * dt)
         self.dt = dt
         self.camRot = self.cam.GetCameraRotation()
         self.handleWeaponFollow(dt)
@@ -240,7 +245,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.handleCamZRot(t)
         self.handleWalkShakeScale(t)
         self.handlecRotZRotFromMovement(dt)
-        self.handleCamVignette(dt * 4)
+        self.handleCamVignette(1 - math.exp(-8 * dt))
         self.handleMuzzleFlashDisappear(dt)
         self.handleRotFromCameraAnim(dt)
         self.handleRecoil(dt)
@@ -248,6 +253,14 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.handleModelZScale()
         self.handleCrosshairAlpha()
         self.handleCrosshairSpread()
+        self.handleCrosshairRotRestore(dt)
+
+    def handleCrosshairRotRestore(self, dt):
+        t = 1 - math.exp(-10 * dt)
+        rot = crosshairRot.getValue(self.localId)
+        x, y = rot.x, rot.y
+        crosshairRot.x.setValue(self.localId, lerp(x, 0, t))
+        crosshairRot.y.setValue(self.localId, lerp(y, 0, t))
 
     def handleCrosshairSpread(self):
         crosshair = CrosshairHud.getInstance()
@@ -269,7 +282,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         )
 
     def handleModelZScale(self):
-        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        tau = max(self.camTotalTime / 5.0, epsilon)
         alpha = 1.0 - math.exp(-self.dt / tau)
         modelScale.setValue(self.localId, lerp(
             modelScale.getValue(self.localId),
@@ -279,8 +292,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
 
     def handleCrosshairAlpha(self):
         # vfx 驱动 crosshair 透明度，和瞄准状态耦合
-        targetAlpha = 0.0 if self.isAiming else 0.7
-        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        targetAlpha = 0.0 if self.isAiming and self.isFirstPerson() else 0.7
+        tau = max(self.camTotalTime / 5.0, epsilon)
         alphaFactor = 1.0 - math.exp(-self.dt / tau)
         self._crosshairAlpha += (targetAlpha - self._crosshairAlpha) * alphaFactor
         crosshair = CrosshairHud.getInstance()
@@ -301,8 +314,8 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         # 骨骼还没绑好时偶尔会返回巨大坐标，这一帧直接跳过，避免模型乱飞
         if modulo(globalOffset) > 16:
             return
-        self.aimingTransitionDuration += dt
-        tau = max(self.aimingTotalTime / 5.0, epsilon)
+        self.camTransitionDuration += dt
+        tau = max(self.camTotalTime / 5.0, epsilon)
         alpha = 1.0 - math.exp(-dt / tau)
         offset = worldToViewDirection(globalOffset, self.cam.GetForward(), (0.0, 1.0, 0.0))
         controlPos.setValue(self.localId, lerpv(
@@ -336,12 +349,20 @@ class PlayerShooterVfxSystem(ClientSubsystem):
 
     def handlecRotZRotFromMovement(self, dt):
         x = self.actorMotion.GetInputVector()[0] * 5
-        zRot = lerp(crosshairRot.z.getValue(self.localId), x, dt * 8)
+        zRot = lerp(crosshairRot.z.getValue(self.localId), x, 1 - math.exp(-8 * dt))
         crosshairRot.z.setValue(self.localId, zRot)
 
     def handleWalkShakeScale(self, t):
         _shakeScale = self.isAiming and 0.4 or 1
-        _walkScale = self.attr.isEntityOnGround() and 1 or 0
+        # 对落地状态做短时保持，避免 isEntityOnGround() 在落地瞬间反复横跳
+        if self.attr.isEntityOnGround():
+            self._groundedTimer = 0.25
+            self._grounded = True
+        elif self._groundedTimer > 0:
+            self._groundedTimer -= self.dt
+        else:
+            self._grounded = False
+        _walkScale = 1 if self._grounded else 0
         _ssLerp = lerp(shakeScale.getValue(self.localId), _shakeScale, t)
         shakeScale.setValue(self.localId, _ssLerp)
         walkScale.setValue(self.localId, lerp(walkScale.getValue(self.localId), _ssLerp * _walkScale, t))
@@ -354,15 +375,18 @@ class PlayerShooterVfxSystem(ClientSubsystem):
                 self.postProcess.SetEnableByName('muzzle_flash', False)
 
     def handleWeaponFollow(self, dt):
-        p = dt * 20
+        p = 1 - math.exp(-20 * dt)
         _dx = lerp(self.lastDx, self.dx, p)
         _dy = lerp(self.lastDy, self.dy, p)
         self.lastDx = _dx
         self.lastDy = _dy
+
         if not self.isAiming:
             xRot.setValue(self.localId, _dx)
             yRot.setValue(self.localId, _dy)
             return
+
+        # 瞄准时武器本身不随鼠标晃动，xRot/yRot 置 0
         xRot.setValue(self.localId, 0)
         yRot.setValue(self.localId, 0)
         crosshairRot.x.setValue(self.localId, clamp(_dx * -0.1, -1, 1))
@@ -389,15 +413,16 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         x, y, _ = self.camRot
         self.camRot = (x, y, newZRot)
 
-    def startAiming(self, aim, vSmooth=0.2):
-        self.fovScale = 1 / aim['scale']
-        self.modelZScale = aim['modelScale']
-        self.cameraAligned = aim['camera']
-        self.aimingTransitionDuration = 0
-        self.aimingTotalTime = aim['ads']
+    def startAiming(self, basic):
+        self.fovScale = 1.0 / basic.modify(stats.fovScale, default=1)
+        self.modelZScale = basic.modify(stats.modelScale)
+        self.cameraAligned = basic.modify(stats.cameraAligned)
+        self.camTransitionDuration = 0
+        self.camTotalTime = basic.modify(stats.adsIn)
         self.isAiming = True
-        self.vSmooth = vSmooth
-        scope = aim.get('scope_effect')
+        isAimingVar.setValue(self.localId, 1)
+        self.vSmooth = basic.modify(stats.vignette)
+        scope = basic.modify(stats.scopeEffect)
         if scope:
             self.postProcess.SetEnableByName('scope', True)
             self.postProcess.SetParameter('scope', 'scale', scope.get('scale', 1.5))
@@ -405,47 +430,45 @@ class PlayerShooterVfxSystem(ClientSubsystem):
             self.postProcess.SetParameter('scope', 'chromaRadius', scope.get('chroma', 0.5))
             self.postProcess.SetParameter('scope', 'bendRadius', scope.get('bend', 0.5))
 
-    def stopAiming(self):
+    def stopAiming(self, basic):
         self.cameraAligned = 'camera'
         self.isAiming = False
+        isAimingVar.setValue(self.localId, 0)
         self.fovScale = 1.0
         self.vSmooth = 0.0
         self.postProcess.SetEnableByName('scope', False)
         self.modelZScale = 1
-        self.aimingTransitionDuration = 0
+        self.camTotalTime = basic.modify(stats.adsOut)
+        self.camTransitionDuration = 0
+
+    def transitionToCamera(self, name, duration):
+        self.cameraAligned = name
+        self.camTransitionDuration = 0
+        self.camTotalTime = duration
 
     _muzzleFlashTimer = 0.0
     _muzzleFlashActive = False
 
     def shootCamVfx(self, sound, recoil):
         sound and self.audio.PlayCustomUIMusic(sound)
-
-        # 枪口火焰：3D 空间点光源（先关再开确保参数更新）
-        # getBonePosition 拿到的是世界坐标，用 worldToViewPoint 变换到视野/相机相对坐标
         muzzle = getBonePosition(self.localId, 'muzzle')
         muzzleView = worldToViewPoint(muzzle, self.cam.GetPosition(), self.cam.GetForward(), (0.0, 1.0, 0.0))
 
-        # 用太阳角度算提亮倍率：太阳高 -> 白天少提亮；太阳低/落下 -> 晚上多提亮
         sunRot = self.skyRender.GetSunRot()
         sunAngle = sunRot[2]  # 第三个分量：0=正午, 90=日落/夜晚, 180=午夜, 270=日出
-        # 用余弦映射：正午1.0，午夜0.0，日出日落0.5
         dayFactor = 0.5 + 0.5 * math.cos(math.radians(sunAngle))
-        # 用二次幂曲线：白天控制在 0.5 左右，夜晚快速拉高，午夜最强
         dayFactor = max(0.0, min(1.0, dayFactor))
         brightness = 0.15 + 5.0 * ((1.0 - dayFactor) ** 2.0)
 
         muzzlePos = [muzzleView.x, muzzleView.y, muzzleView.z, brightness]
 
-        self.postProcess.SetEnableByName('muzzle_flash', False)
         self.postProcess.SetEnableByName('muzzle_flash', True)
-
-        # 先开启后处理再传参数，避免 enable 时重置参数
         self.postProcess.SetParameter('muzzle_flash', 'muzzlePos', muzzlePos)
         self._muzzleFlashTimer = 0.05
         self._muzzleFlashActive = True
 
         yaw, pitch = self._recoil
-        horizontal, vertical = recoil['value']
+        horizontal, vertical = recoil
         self._recoil = (
             yaw + horizontal * rand.choice((-1, 1)),
             pitch + vertical,

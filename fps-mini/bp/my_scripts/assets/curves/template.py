@@ -2,6 +2,6 @@
 from ...engine.architect.math.common import Curve
 
 Asset = Curve([
-    (200,   1.0),
+    (250,   1.0),
     (0,     0.0),
 ])

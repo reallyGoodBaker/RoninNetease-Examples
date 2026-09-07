@@ -9,6 +9,22 @@ from ..engine.architect.compact import (
 )
 from mod.common.minecraftEnum import AttrType
 from ..engine.architect.math.double import clamp
+from ..engine.architect.persistent.server import ServerKVDatabase
+from .gunSync import defaultGunStorage
+
+
+def getOrCreateGunStorage(gunId, itemName=''):
+    # type: (str, str) -> object
+    """Return the GunStorage DatabaseView and ensure the gun record exists.
+
+    The caller can use view.cache[gunId] to read and view.set(gunId, record)
+    to persist the whole record back.
+    """
+    gunStorage = ServerKVDatabase.getInstance().createView('GunStorage')
+    record = gunStorage.cache.get(gunId)
+    if not isinstance(record, dict):
+        gunStorage.set(gunId, defaultGunStorage(itemName))
+    return gunStorage
 
 
 @Component()
@@ -56,6 +72,6 @@ class BulletServerAuthSystem(ServerSubsystem):
         self.submitDamage(target, playerId, damage, caliber)
         SubsystemManager.getInstance().bus.execute(
             'ShooterIndicatorServer.hit',
-            playerId, isHeadShot, willKill, target
+            playerId, isHeadShot, willKill, target, damage
         )
 

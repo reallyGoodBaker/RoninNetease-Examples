@@ -6,6 +6,8 @@
         "rp\\models",
         "rp\\textures"
     ],
-    "Uluru.autoLayerDict": {},
+    "Uluru.autoLayerDict": {
+        "gun_smith": true
+    },
     "Uluru.checkSuspectOldUI": true
 }

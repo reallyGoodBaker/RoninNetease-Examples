@@ -2,6 +2,7 @@
     "ui_defs": [
         "ui/ammo.json",
         "ui/crosshair.json",
+        "ui/gun_smith.json",
         "ui/shooter_indicator.json"
     ]
 }

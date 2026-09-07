@@ -23,6 +23,9 @@
                 },
                 {
                     "*sleeve": false
+                },
+                {
+                    "bayonet": "v.attach_bayonet ?? 0"
                 }
             ],
             "smooth_normal": false
@@ -42,11 +45,33 @@
                     "*": false
                 },
                 {
-                    "*arm": true
+                    "*arm": "!q.mod.gunsmith"
                 },
                 {
-                    "*sleeve": true
+                    "*sleeve": "!q.mod.gunsmith"
                 }
+            ]
+        },
+        "controller.render.tint.overlay": {
+            "geometry": "geometry.default",
+            "textures": [
+                "texture.tint_mask"
+            ],
+            "materials": [
+                {
+                    "*": "material.tint_overlay"
+                }
+            ],
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            },
+            "part_visibility": [
+                { "*": true },
+                { "*arm": false },
+                { "*sleeve": false }
             ]
         },
         "controller.render.no_shadow": {
@@ -87,6 +112,12 @@
             "textures": [
                 "texture.weapon"
             ],
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            },
             "part_visibility": [
                 { "*": true },
                 { "*arm": false },
