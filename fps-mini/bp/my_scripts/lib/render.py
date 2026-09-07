@@ -17,23 +17,6 @@ from mod.client.component.actorRenderCompClient import ActorRenderCompClient
 FP_COND = 'v.is_first_person && !q.is_spectator'
 TP_COND = '!v.is_first_person && !v.map_face_icon && !q.is_spectator'
 
-# Appearance/tint may override the weapon's default tint mask at runtime.
-_tintMaskOverride = {}
-
-
-def setPlayerTintMaskTexture(entityId, texturePath):
-    # type: (str, str) -> None
-    """Override the tint_mask texture for the next applyRenderResource().
-
-    We intentionally do not touch the live renderer here: rebuilding the
-    player render at the wrong time can disturb the already-working weapon
-    render. The override is picked up on the next render-resource apply.
-    """
-    if not entityId or not texturePath:
-        return
-    _tintMaskOverride[entityId] = texturePath
-
-
 def setNativeRenderControllerEnabled(renderer, enable=True):
     # type: (ActorRenderCompClient, bool) -> None
     if enable:
@@ -95,8 +78,6 @@ def applyRenderResource(renderer, asset, renderParams):
     for k, v in asset['materials'].items():
         renderer.AddPlayerRenderMaterial(k, v)
     renderer.AddPlayerTexture('weapon', asset['texture'])
-    tintMaskTexture = _tintMaskOverride.get(renderParams.entityId) or asset.get('tintMaskTexture') or 'textures/entity/weapons/bolt_tint_mask'
-    renderer.AddPlayerTexture('tint_mask', tintMaskTexture)
     first = asset['render']['first_person']
     third = asset['render']['third_person']
     renderParams.first = first
@@ -119,7 +100,6 @@ def applyRenderResource(renderer, asset, renderParams):
 
 def resetRenderResource(renderer, renderParams):
     # type: (ActorRenderCompClient, LocalPlayerRenderParams) -> None
-    _tintMaskOverride.pop(renderParams.entityId, None)
     if not renderParams.geometry:
         renderer.AddPlayerGeometry('default', 'geometry.humanoid.custom')
     else:

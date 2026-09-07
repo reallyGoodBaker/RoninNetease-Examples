@@ -138,7 +138,6 @@ class GunBasic(object):
         # Rebuild from the current attachment map only.
         self._rebuildModifierCategories()
         self._rebuildFeatures()
-        self._syncAppearanceVisual()
 
 
     def _rebuildFeatures(self):
@@ -172,7 +171,6 @@ class GunBasic(object):
         if attachment == None:
             self.removeAttachment(slot)
             self._handleAttachmentVisual(slot, attachment)
-            self._syncAppearanceVisual()
             return
         attachmentId = attachment['attachmentId']
         slotId = slot['slotId']
@@ -184,7 +182,6 @@ class GunBasic(object):
         self._rebuildModifierCategories()
         self._rebuildFeatures()
         self._handleAttachmentVisual(slot, attachment)
-        self._syncAppearanceVisual()
         self.vfxSystem.transitionToCamera(slot['cameraAligned'], 0.2)
 
 
@@ -285,36 +282,6 @@ class GunBasic(object):
             controlName,
         ).setValue(int(enabled))
 
-    def hasAppearanceEquipped(self):
-        # type: () -> bool
-        for slot in self.slots:
-            if slot.get('type') in ('appearance', 'tint'):
-                if self.attachments.get(slot['slotId']):
-                    return True
-        return False
-
-    def _getActiveTintMaskTexture(self):
-        # type: () -> str
-        mask = self.asset.get('tintMaskTexture') or 'textures/entity/weapons/bolt_tint_mask'
-        for slot in self.slots:
-            if slot.get('type') not in ('appearance', 'tint'):
-                continue
-            attachmentId = self.attachments.get(slot['slotId'])
-            if not attachmentId:
-                continue
-            asset = self._findAttachmentAsset(attachmentId)
-            if asset and asset.get('tintMaskTexture'):
-                mask = asset['tintMaskTexture']
-        return mask
-
-    def _syncAppearanceVisual(self):
-        # type: () -> None
-        mask = self._getActiveTintMaskTexture()
-        print '[GunBasic] sync tint mask:', mask
-        from .render import setPlayerTintMaskTexture
-        setPlayerTintMaskTexture(localPlayerId(), mask)
-
-
     @Async
     def resetTo(self, asset, ammoCount=None):
         # type: (Asset, int | None) -> None
@@ -363,7 +330,6 @@ class GunBasic(object):
         self.nextFireTime = 0
         self.autoFireInterval = self.bolt['boltOpenTime'] + self.bolt['boltCloseTime']
         self.stun = None
-        self._syncAppearanceVisual()
 
     def modify(self, stat, pathTo=None, default=0):
         if not pathTo:

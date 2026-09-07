@@ -28,7 +28,13 @@
                     "bayonet": "v.attach_bayonet ?? 0"
                 }
             ],
-            "smooth_normal": false
+            "smooth_normal": false,
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            }
         },
         "controller.render.first_person.arm": {
             "geometry": "geometry.arms",
@@ -49,37 +55,6 @@
                 },
                 {
                     "*sleeve": "!q.mod.gunsmith"
-                }
-            ]
-        },
-        "controller.render.tint.overlay": {
-            "geometry": "geometry.default",
-            "textures": [
-                "texture.tint_mask"
-            ],
-            "materials": [
-                {
-                    "*": "material.tint_overlay"
-                }
-            ],
-            "overlay_color": {
-                "r": 1.0,
-                "g": 0.0,
-                "b": 0.0,
-                "a": 1.0
-            },
-            "part_visibility": [
-                {
-                    "*": true
-                },
-                {
-                    "*arm": false
-                },
-                {
-                    "*sleeve": false
-                },
-                {
-                    "bayonet": "v.attach_bayonet ?? 0"
                 }
             ]
         },
@@ -120,38 +95,6 @@
             ],
             "textures": [
                 "texture.weapon"
-            ],
-            "overlay_color": {
-                "r": "query.mod.tint_color_r",
-                "g": "query.mod.tint_color_g",
-                "b": "query.mod.tint_color_b",
-                "a": "query.mod.tint_color_a"
-            },
-            "part_visibility": [
-                {
-                    "*": true
-                },
-                {
-                    "*arm": false
-                },
-                {
-                    "*leg": false
-                },
-                {
-                    "head": false
-                }
-            ]
-        },
-        "controller.render.tint.third_person": {
-            "filter_lighting": true,
-            "geometry": "geometry.third_model",
-            "materials": [
-                {
-                    "*": "material.tint_overlay"
-                }
-            ],
-            "textures": [
-                "texture.tint_mask"
             ],
             "overlay_color": {
                 "r": "query.mod.tint_color_r",

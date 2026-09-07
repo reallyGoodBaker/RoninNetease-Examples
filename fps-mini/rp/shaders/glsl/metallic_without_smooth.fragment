@@ -11,6 +11,7 @@ precision highp float;
 #include "uniformExtraVectorConstants.h"
 
 LAYOUT_BINDING(0) uniform sampler2D TEXTURE_0;
+uniform vec4 OVERLAY_COLOR;
 
 // 这些 varying 由网易 entity_alphatest 顶点着色器输出
 varying vec4 light;
@@ -29,6 +30,44 @@ void main()
         discard;
     }
 
+    // 粗筛金属/非金属：与生成 tint mask 的同一套启发式
+    vec3 baseColor = albedo.rgb;
+    bool isWarm = (baseColor.r > 60.0 / 255.0 && baseColor.r > baseColor.b * 1.2 && baseColor.r >= baseColor.g * 0.75)
+               || (baseColor.r > 120.0 / 255.0 && baseColor.g > 60.0 / 255.0 && baseColor.b < 100.0 / 255.0);
+    float baseMetalness = isWarm ? 0.2 : 0.95;
+
+    float tintAlpha = clamp(OVERLAY_COLOR.a, 0.0, 1.0);
+    float tintMax = max(OVERLAY_COLOR.r, max(OVERLAY_COLOR.g, OVERLAY_COLOR.b));
+    float tintMin = min(OVERLAY_COLOR.r, min(OVERLAY_COLOR.g, OVERLAY_COLOR.b));
+    float tintSat = tintMax > 0.0 ? (tintMax - tintMin) / tintMax : 0.0;
+    float tintSatClamped = clamp(tintSat, 0.0, 1.0);
+
+    // 低饱和度时：金属部分快速收敛到金属质感
+    float metalConverge = (1.0 - tintSatClamped) * tintAlpha;
+    float metalness = isWarm ? baseMetalness : mix(baseMetalness, 1.0, metalConverge);
+
+    // 金属单独处理：饱和度越低越接近真铁，越高越接近黄铜
+    float isMetal = isWarm ? 0.0 : 1.0;
+    vec3 ironColor = vec3(0.23, 0.24, 0.27);
+    vec3 brassColor = vec3(0.76, 0.58, 0.30);
+    vec3 metalTarget = mix(ironColor, brassColor, tintSatClamped);
+
+    // 木托按玩家选的颜色染；金属按 iron/brass 收敛
+    vec3 tintTarget = mix(OVERLAY_COLOR.rgb, metalTarget, isMetal);
+    float woodStrength = tintAlpha * 0.85;
+    float metalStrength = tintAlpha * 0.12;
+    float tintStrength = mix(woodStrength, metalStrength, isMetal);
+    vec3 tinted = mix(albedo.rgb, tintTarget, tintStrength);
+
+    // 饱和度控制：
+    // 低饱和 -> 强烈去饱和，接近拟真
+    // 高饱和 -> 拉到很高，塑料感
+    float tintLuma = dot(tinted, vec3(0.299, 0.587, 0.114));
+    float desatStrength = clamp((1.0 - tintSatClamped) * tintAlpha * 1.5, 0.0, 1.0);
+    vec3 tintedDesat = mix(tinted, vec3(tintLuma), desatStrength);
+    float satBoost = 1.0 + tintSatClamped * tintAlpha * 1.2;
+    albedo.rgb = clamp(mix(vec3(tintLuma), tintedDesat, satBoost), 0.0, 1.0);
+
     // 用屏幕空间导数重建平面法线，强制 flat shading，保持 lowpoly 棱角
     // 注意：本引擎的 worldSpacePos 是“以相机为原点”的坐标，所以视线方向直接取 -worldSpacePos
     vec3 V = normalize(-worldSpacePos.xyz);
@@ -39,10 +78,12 @@ void main()
         N = -N;
     }
 
-    // 中等金属质感，全部硬编码，不开放参数
-    const float metallic = 0.6;
-    const float specStrength = 1.2;
-    const float shininess = 24.0;
+    // 金属度已根据粗筛结果动态计算
+    float metallic = metalness;
+
+    // 金属/非金属光照参数：金属高光、锋利
+    float specStrength = mix(0.6, 2.0, metallic);
+    float shininess = mix(8.0, 48.0, metallic);
     const float ambient = 0.55;
     const float lightStrength = 1.0;
 
@@ -60,11 +101,15 @@ void main()
     // 金属反射颜色用 albedo 染色
     vec3 specColor = mix(vec3(0.04), albedo.rgb, metallic);
 
-    // 中等金属：压低一点漫反射，但保留足够亮度
     // 用引擎 light.rgb 做主光照，白天亮、晚上暗，同时给一个下限避免死黑
     vec3 engineLight = clamp(light.rgb, vec3(0.4), vec3(1.3));
-    vec3 color = albedo.rgb * diffuse * engineLight * (1.0 - metallic * 0.3);
+    vec3 color = albedo.rgb * diffuse * engineLight * (1.0 - metallic * 0.5);
     color += specColor * spec * (0.6 + 0.4 * ndl) * engineLight;
+
+    // 金属边缘反射（Fresnel），让金属更亮
+    float fresnel = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 3.0);
+    color += specColor * fresnel * metallic * engineLight * 0.8;
+
     color += albedo.rgb * 0.12;
 
     // 沿用原版实体的雾

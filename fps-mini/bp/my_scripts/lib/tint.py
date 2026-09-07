@@ -30,7 +30,6 @@ def applyAppearance(appearance):
     if rgb is None:
         clearAppearance()
         return
-    print '[Tint] applyAppearance rgb=', rgb, 'alpha=', alpha
     tintColorR.setValue(localPlayerId(), float(rgb[0]) / 255.0)
     tintColorG.setValue(localPlayerId(), float(rgb[1]) / 255.0)
     tintColorB.setValue(localPlayerId(), float(rgb[2]) / 255.0)

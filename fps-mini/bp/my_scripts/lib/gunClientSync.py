@@ -131,7 +131,6 @@ class GunClientSyncSystem(ClientSubsystem):
         self.canonicalState = copy.deepcopy(state)
         self.canonicalUid = result.get('uid') or ''
         self.canonicalItemName = state.get('itemName')
-        print '[GunClientSync] state appearance:', state.get('appearance')
         self._applyToShooter()
         pass
 
@@ -159,14 +158,11 @@ class GunClientSyncSystem(ClientSubsystem):
         # type: (dict) -> object | None
         """Persist an appearance dict for the currently carried gun."""
         if not self.canonicalState or not self.canonicalUid:
-            print '[GunClientSync] set appearance unavailable'
             return None
         itemName = self.canonicalState.get('itemName')
         if not itemName:
-            print '[GunClientSync] set appearance no item'
             return None
 
-        print '[GunClientSync] set appearance send:', appearance
         token = self._requestToken
         try:
             future = remote.client.invoke(
@@ -191,14 +187,11 @@ class GunClientSyncSystem(ClientSubsystem):
         # type: (int) -> object | None
         """Persist the current magazine ammo count for the carried gun."""
         if not self.canonicalState or not self.canonicalUid:
-            print '[GunClientSync] set appearance unavailable'
             return None
         itemName = self.canonicalState.get('itemName')
         if not itemName:
-            print '[GunClientSync] set appearance no item'
             return None
 
-        print '[GunClientSync] set ammo send:', ammoCount
         token = self._requestToken
         try:
             future = remote.client.invoke(
@@ -241,14 +234,11 @@ class GunClientSyncSystem(ClientSubsystem):
         # type: (dict, dict | None) -> object | None
         """Persist attachment map and appearance together on the server."""
         if not self.canonicalState or not self.canonicalUid:
-            print '[GunClientSync] set attachments unavailable'
             return None
         itemName = self.canonicalState.get('itemName')
         if not itemName:
-            print '[GunClientSync] set attachments no item'
             return None
 
-        print '[GunClientSync] set attachments send:', attachments, appearance
         token = self._requestToken
         try:
             future = remote.client.invoke(
@@ -293,12 +283,10 @@ class GunClientSyncSystem(ClientSubsystem):
         if token != self._requestToken:
             return
         if not isinstance(result, dict) or not result.get('ok'):
-            print '[GunClientSync] set appearance failed:', result
             return
         state = result.get('state')
         if isinstance(state, dict):
             self.canonicalState = copy.deepcopy(state)
-            print '[GunClientSync] set appearance ok:', state.get('appearance')
 
     def _onAppearanceError(self, token, error):
         # type: (int, object) -> None
