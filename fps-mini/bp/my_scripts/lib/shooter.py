@@ -304,6 +304,11 @@ class ShooterSystem(ClientSubsystem):
         else:
             # 切回空手时清除枪械 feature，并摘除动态挂载的 feature 状态节点
             self.featuresComponent.clear()
+            try:
+                from .tint import clearAppearance
+                clearAppearance()
+            except Exception as errorObject:
+                pass
             self.weapon = None
             self.pendingDrawKey = None
             self.currentDrawKey = None
@@ -341,6 +346,7 @@ class ShooterSystem(ClientSubsystem):
             attachments = state.get('attachments')
             if isinstance(attachments, dict) and self.weapon:
                 self.weapon.applyServerAttachments(attachments)
+            self._applyAppearanceState(state)
             return True
 
         if not self.weapon:
@@ -352,6 +358,7 @@ class ShooterSystem(ClientSubsystem):
         attachments = state.get('attachments')
         if isinstance(attachments, dict):
             self.weapon.applyServerAttachments(attachments)
+        self._applyAppearanceState(state)
 
         ammoCount = state.get('ammoCount')
         if ammoCount is None or ammoCount < 0:
@@ -359,6 +366,13 @@ class ShooterSystem(ClientSubsystem):
         capacity = self.weapon.modify(stats.magazineCapacity)
         self.weapon.bulletCount = max(0, min(capacity, int(ammoCount)))
         return True
+
+    def _applyAppearanceState(self, state):
+        # type: (dict) -> None
+        from .tint import applyAppearance
+        appearance = state.get('appearance')
+        print '[Shooter] apply appearance state:', appearance
+        applyAppearance(appearance)
 
 
     def _getAnimDuration(self, animEx, animKey):

@@ -63,16 +63,24 @@
                 }
             ],
             "overlay_color": {
-                "r": "query.mod.tint_color_r",
-                "g": "query.mod.tint_color_g",
-                "b": "query.mod.tint_color_b",
-                "a": "query.mod.tint_color_a"
+                "r": 1.0,
+                "g": 0.0,
+                "b": 0.0,
+                "a": 1.0
             },
             "part_visibility": [
-                { "*": true },
-                { "*arm": false },
-                { "*sleeve": false },
-                { "bayonet": "v.attach_bayonet ?? 0" }
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*sleeve": false
+                },
+                {
+                    "bayonet": "v.attach_bayonet ?? 0"
+                }
             ]
         },
         "controller.render.no_shadow": {
@@ -120,10 +128,50 @@
                 "a": "query.mod.tint_color_a"
             },
             "part_visibility": [
-                { "*": true },
-                { "*arm": false },
-                { "*leg": false },
-                { "head": false }
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*leg": false
+                },
+                {
+                    "head": false
+                }
+            ]
+        },
+        "controller.render.tint.third_person": {
+            "filter_lighting": true,
+            "geometry": "geometry.third_model",
+            "materials": [
+                {
+                    "*": "material.tint_overlay"
+                }
+            ],
+            "textures": [
+                "texture.tint_mask"
+            ],
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            },
+            "part_visibility": [
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*leg": false
+                },
+                {
+                    "head": false
+                }
             ]
         }
     }
