@@ -7,7 +7,10 @@
         "metallic_without_smooth:entity_alphatest": {
             "fragmentShader": "shaders/glsl/metallic_without_smooth.fragment",
             "-defines": [
-                "FANCY"
+                "DisableCulling"
+            ],
+            "-states": [
+                "DisableCulling"
             ],
             "+defines": [
                 "RNGL_LOCAL_LIGHT"

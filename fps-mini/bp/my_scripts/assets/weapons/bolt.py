@@ -120,7 +120,7 @@ Asset = {
         },
         {
             'slotId': 'fovScale',
-            'attachmentAsset': 'attachments.fov1_5x',
+            'attachmentAsset': 'attachments.fov1x',
             'cameraAligned': 'camera',
             'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
             'category': 'fovScale',              # 槽位分类, 自由字符串
@@ -131,7 +131,7 @@ Asset = {
             'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
             'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
             'attachmentAsset': 'attachments.appearance.smle_mk3',
-            'category': 'appearance',                   # 槽位分类, 自由字符串
+            'category': 'appearance_smle_mk3',                   # 槽位分类, 自由字符串
             'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
         },
     ]

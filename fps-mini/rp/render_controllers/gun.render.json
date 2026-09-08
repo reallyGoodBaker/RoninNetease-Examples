@@ -26,6 +26,50 @@
                 },
                 {
                     "bayonet": "v.attach_bayonet ?? 0"
+                },
+                {
+                    "eyepiece": "!q.mod.is_aiming"
+                }
+            ],
+            "smooth_normal": false,
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            }
+        },
+        "controller.render.template.mp18": {
+            "geometry": "geometry.default",
+            "textures": [
+                "texture.weapon"
+            ],
+            "materials": [
+                {
+                    "*": "material.weapon",
+                    "glow*": "material.glow",
+                    "scope_inner": "material.scope",
+                    "eyepiece": "material.eyepiece"
+                }
+            ],
+            "part_visibility": [
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*sleeve": false
+                },
+                {
+                    "bayonet": "v.attach_bayonet ?? 0"
+                },
+                {
+                    "normal": "v.attach_magazine == 1"
+                },
+                {
+                    "drum": "v.attach_magazine == 2"
                 }
             ],
             "smooth_normal": false,
@@ -114,6 +158,9 @@
                 },
                 {
                     "head": false
+                },
+                {
+                    "eyepiece": "!q.mod.is_aiming"
                 }
             ]
         }

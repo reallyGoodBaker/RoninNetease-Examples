@@ -106,12 +106,29 @@ Asset = {
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
         {
-            'slotId': 'bayonet',
+            'slotId': 'magazine',
+            'attachmentAsset': 'attachments.mp18_magazine',
+            'cameraAligned': 'magazine_view',
+            'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
+            'category': 'magazine_mp18',              # 槽位分类, 自由字符串
+            'displayName': 'slot.magazine.name', # 槽位的名称，可以使用lang文件中的键
+            'control': 'attach_magazine',
+        },
+        {
+            'slotId': 'fovScale',
+            'attachmentAsset': 'attachments.fov1x',
             'cameraAligned': 'camera',
             'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
-            'category': 'bayonet',              # 槽位分类, 自由字符串
-            'displayName': 'slot.bayonet.name', # 槽位的名称，可以使用lang文件中的键
-            'control': 'attach_bayonet',
-        }
+            'category': 'fovScale',              # 槽位分类, 自由字符串
+            'displayName': 'slot.fov_scale.name', # 槽位的名称，可以使用lang文件中的键
+        },
+        {
+            'slotId': 'appearance',                     # 槽位 id，在当前武器应该为唯一
+            'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
+            'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
+            'attachmentAsset': 'attachments.appearance.mp18',
+            'category': 'appearance_mp18',                   # 槽位分类, 自由字符串
+            'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
+        },
     ]
 }

@@ -5,6 +5,13 @@ item.roninexample:auto.name=MP18
 
 slot.bayonet.name=刺刀
 slot.fov_scale.name=视野缩放
+slot.fov1x.name=1 倍
 slot.fov1_5x.name=1.5 倍
 slot.fov2x.name=2 倍
 slot.appearance.name=外观
+slot.telescope.name=光学瞄具
+slot.telescope3x.name=三倍光学瞄具
+slot.telescope10x.name=十倍光学瞄具
+slot.magazine.name=弹匣
+slot.mp18_normal_magazine.name=MP18 20发弹匣
+slot.mp18_drum_magazine.name=MP18 30发弹鼓

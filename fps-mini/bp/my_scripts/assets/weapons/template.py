@@ -144,7 +144,7 @@ Asset = {
             'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
             'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
             'attachmentAsset': 'attachments.bayonet',   # baked 配件槽位需要绑定一个已经存在的 attachment 预设
-            'category': 'appearance',                   # 槽位分类, 自由字符串
+            'category': 'appearance_template',                   # 槽位分类, 自由字符串
             'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
         }
     ]

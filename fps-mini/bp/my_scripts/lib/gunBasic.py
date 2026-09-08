@@ -245,6 +245,21 @@ class GunBasic(object):
             if asset:
                 self.applyAttachment(slot, asset)
 
+        # 如果服务器没有指定配件，应用 slot 的默认 attachmentAsset
+        for slot in self.slots:
+            slotId = slot['slotId']
+            if self.attachments.get(slotId):
+                continue
+            attachmentAsset = slot.get('attachmentAsset')
+            if not attachmentAsset:
+                continue
+            try:
+                defaultAsset = Asset(attachmentAsset).load(True)
+            except Exception:
+                defaultAsset = None
+            if defaultAsset:
+                self.applyAttachment(slot, defaultAsset)
+
     def _updateAttachmentFeatures(self, attachment, remove=False):
         if remove:
             restoreList = attachment.get('-features', [])
@@ -269,18 +284,20 @@ class GunBasic(object):
 
     def _handleAttachmentVisual(self, slot, attachment):
         if slot['type'] == 'baked':
-            self._setBakedAttachmentEnabled(slot, bool(attachment))
+            attachmentValue = False if not attachment else 1 if 'value' not in attachment else attachment['value']
+            self._setBakedAttachmentEnabled(slot, attachmentValue)
             return
         
 
-    def _setBakedAttachmentEnabled(self, slot, enabled):
+    def _setBakedAttachmentEnabled(self, slot, attachmentValue):
         controlName = slot.get('control')
         if not controlName:
             return
         NamedEntityVariable(
             localPlayerId(),
             controlName,
-        ).setValue(int(enabled))
+        ).setValue(int(attachmentValue))
+
 
     @Async
     def resetTo(self, asset, ammoCount=None):

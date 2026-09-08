@@ -10,6 +10,7 @@ from ..engine.architect.compact import (
     tup, add, mul, vec, clientApi,
     lerp as lerpv, epsilon, modulo,
     UiSubsystem, UiDef, AutoCreate, Hud,
+    destroyComponent,
 )
 from ..engine.architect.math.double import alerp, lerp, clamp, random
 from ..engine.architect.math.utils import worldToViewDirection, worldToViewPoint, viewToWorld, screenSize
@@ -26,6 +27,7 @@ import math
 import random as rand
 
 FULL_ANGLE = 360
+MAX_CASINGS = 16
 
 # 玩家 client_entity scripts.scale，用于世界坐标 -> 模型单位的换算
 PLAYER_SCALE = 16 / 0.9375
@@ -133,6 +135,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
     def onInit(self):
         self.canTick = True
         self.dt = 0.0
+        self._activeCasings = []
         level = LevelClient.getInstance()
         self.localId = localPlayerId()
         self.audio = level.customAudio
@@ -483,6 +486,12 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         isFirstPerson.setValue(self.localId, ev.to == 0)
 
     def dropEmptyBullet(self, model, viewMotion):
+        # 限制弹壳数量，避免高射速时积累过多
+        while len(self._activeCasings) >= MAX_CASINGS:
+            oldId = self._activeCasings.pop(0)
+            if oldId:
+                self.destroyEntity(oldId)
+                destroyComponent(oldId, CaseMovement)
         x, y, z = tup(getBonePosition(self.localId, 'ejection'))
         entityId = self.spawnEntity(
             model,
@@ -498,13 +507,17 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         ))
         randomV = random(2 * FULL_ANGLE, 5 * FULL_ANGLE)
         caseMovement.angulerVelocity = (randomV, randomV / 2)
+        self._activeCasings.append(entityId)
 
     @Sched.Render()
     @Query(EntityId, CaseMovement, NeC.Pos, NeC.Rot)
     def handleCaseMovement(self, id, movement, pos, rot):
         # type: (str, CaseMovement, PosComponentClient, RotComponentClient) -> None
         if movement.remains <= 0:
+            destroyComponent(id, CaseMovement)
             self.destroyEntity(id)
+            if id in self._activeCasings:
+                self._activeCasings.remove(id)
             return
         dt = self.dt
         vx, vy, vz = movement.velocity

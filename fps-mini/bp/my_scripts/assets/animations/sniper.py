@@ -12,4 +12,6 @@ Asset = {
 
     'fp.draw': 'animation.weapons.bolt.fp.draw',
     'fp.holster': 'animation.weapons.bolt.fp.holster',
+
+    'gunsmith': 'animation.weapons.bolt.gunsmith2',
 }

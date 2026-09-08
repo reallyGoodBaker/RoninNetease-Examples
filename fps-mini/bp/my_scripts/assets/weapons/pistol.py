@@ -105,5 +105,13 @@ Asset = {
     # --- 配件槽位数组 (slots) ---
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
+        {
+            'slotId': 'fovScale',
+            'attachmentAsset': 'attachments.fov1x',
+            'cameraAligned': 'camera',
+            'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
+            'category': 'fovScale',              # 槽位分类, 自由字符串
+            'displayName': 'slot.fov_scale.name', # 槽位的名称，可以使用lang文件中的键
+        },
     ]
 }

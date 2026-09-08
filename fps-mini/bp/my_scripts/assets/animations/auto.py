@@ -11,4 +11,6 @@ Asset = {
 
     'fp.draw': 'animation.template.mp18.draw',
     'fp.holster': 'animation.template.mp18.holster',
+
+    'gunsmith': 'animation.template.mp18.gunsmith',
 }

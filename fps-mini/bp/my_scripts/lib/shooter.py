@@ -106,6 +106,8 @@ class ShooterSystem(ClientSubsystem):
         self.pendingServerWeaponName = None
         self.pendingServerItemName = None
         self.pendingUid = None
+        self.pendingServerState = None
+        self.pendingServerUid = ''
 
 
     def resetSessionCache(self):
@@ -116,6 +118,8 @@ class ShooterSystem(ClientSubsystem):
         self.pendingServerWeaponName = None
         self.pendingServerItemName = None
         self.pendingUid = None
+        self.pendingServerState = None
+        self.pendingServerUid = ''
 
     def onReady(self):
         self.shooterVfx = PlayerShooterVfxSystem.getInstance()
@@ -167,12 +171,26 @@ class ShooterSystem(ClientSubsystem):
         # If the gun was selected but the server has not returned its state yet,
         # hide the weapon and wait for GunClientSyncSystem.applyServerGunState().
         if weaponName and not serverReady:
+            # 如果手上已经是这把枪了，不要再 holster/draw，等服务器状态到来直接更新即可
+            if self.weapon and self.currentItemName == itemName:
+                return
             self.pendingServerWeaponName = weaponName
             self.pendingServerItemName = itemName
             self.pendingUid = uid
             self.changeToken += 1
             token = self.changeToken
-            self._finishChangeWeapon(None, token, None, None)
+
+            # 先播上一把枪的 holster，再收起武器等待服务器状态
+            oldWeapon = self.weapon
+            holsterKey = oldWeapon.modify(stats.animHolster) if oldWeapon else None
+            if oldWeapon and holsterKey:
+                self.isSwitchingWeapon = True
+                self.switchPhase = 'holster'
+                oldWeapon.animEx.play(holsterKey, replay=True)
+                duration = self._getAnimDuration(oldWeapon.animEx, holsterKey)
+                addTimer(duration, lambda: self._finishChangeWeapon(None, token, None, None), False)
+            else:
+                self._finishChangeWeapon(None, token, None, None)
             return
 
         # A real weapon switch is allowed now; clear any server-wait state.
@@ -314,7 +332,15 @@ class ShooterSystem(ClientSubsystem):
             self.currentDrawKey = None
             self.switchPhase = None
             self.isSwitchingWeapon = False
+            # 先本地立即清除枪模，避免 holster 结束后剩一帧又出现
+            renderSystem.changeRenderResource(localPlayerId(), None)
             renderSystem.sendServer('renderResource', { 'entity': localPlayerId(), 'uri': None })
+            if self.pendingServerState:
+                pendingState = self.pendingServerState
+                pendingUid = self.pendingServerUid
+                self.pendingServerState = None
+                self.pendingServerUid = ''
+                self.applyServerGunState(pendingState, pendingUid)
 
         self.switchNode(self.root)
         self.finishTasks()
@@ -336,6 +362,11 @@ class ShooterSystem(ClientSubsystem):
         """Apply server-stored ammo to the currently held gun when state arrives."""
         stateItemName = state.get('itemName')
         if self.pendingServerWeaponName and self.pendingServerItemName == stateItemName:
+            # 如果正在播叠上一把枪的 holster，先放入缓存，等 holster 完成后再应用
+            if self.isSwitchingWeapon and self.switchPhase == 'holster':
+                self.pendingServerState = state
+                self.pendingServerUid = uid or ''
+                return False
             weaponName = self.pendingServerWeaponName
             itemName = self.pendingServerItemName
             savedAmmo = state.get('ammoCount')

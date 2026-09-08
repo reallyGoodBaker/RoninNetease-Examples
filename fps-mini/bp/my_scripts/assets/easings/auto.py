@@ -13,4 +13,5 @@ Asset = {
     'fp.slideclose':    defaultInConf,
     'fp.draw':          AnimationEasingConf(1, 0),
     'fp.holster':       AnimationEasingConf(1, 0.2),
+    'gunsmith':         defaultInConf,
 }

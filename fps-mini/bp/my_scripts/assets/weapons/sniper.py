@@ -87,19 +87,13 @@ Asset = {
             'emptyFireSound': '',       # 空仓射击音效，空字符串为不播放
         },
         'aim': {     # 基础瞄准功能
-            'scale': 2.0,
+            'scale': 1,
             'camera': 'tele_sight',     # 瞄准时相机名称
             'modelScale': 0.4,                 # 瞄准时z轴缩放
-            'adsIn': 0.5,
+            'adsIn': 0.4,
             'adsOut': 0.3,
             'spreadMultiplier': 0.5,
             'vignette': 0.2,            # 暗角范围
-            'scopeEffect': {            # 先调好再写到设置里
-                'scale': 3.872,         # 瞄准镜放大倍率
-                'vignette': 0.257,      # 暗角
-                'chroma': 0.18,         # 色散
-                'bend': 0.213           # 边缘弯折
-            }
         },
         'walk': {
             'animation': '',
@@ -116,6 +110,21 @@ Asset = {
     # --- 配件槽位数组 (slots) ---
     # 所有可安装附件的槽位, 完全由数据定义
     'slots': [
-
+        {
+            'slotId': 'telescope',
+            'attachmentAsset': 'attachments.telescope3x',
+            'cameraAligned': 'tele_view',
+            'type': 'baked',                    # 槽位类型，attachable 为动态添加，baked 为使用molang切换显示隐藏
+            'category': 'telescope',              # 槽位分类, 自由字符串
+            'displayName': 'slot.telescope.name', # 槽位的名称，可以使用lang文件中的键
+        },
+        {
+            'slotId': 'appearance',                     # 槽位 id，在当前武器应该为唯一
+            'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
+            'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
+            'attachmentAsset': 'attachments.appearance.smle_mk3',
+            'category': 'appearance_smle_mk3',                   # 槽位分类, 自由字符串
+            'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
+        },
     ]
 }

@@ -36,6 +36,22 @@ AnimMeta = {
         "loop": "hold_on_last_frame",
         "length": 0.2917
     },
+    "animation.template.mp18.gunsmith": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.mp18.walk2": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.mp18.run2": {
+        "loop": "hold_on_last_frame",
+        "length": -1
+    },
+    "animation.template.mp18.shoot2": {
+        "loop": False,
+        "length": 0.1667
+    },
     "animation.weapons.bolt.fp.shoot": {
         "loop": "hold_on_last_frame",
         "length": 0.3333
@@ -88,7 +104,7 @@ AnimMeta = {
         "loop": "hold_on_last_frame",
         "length": 1.0625,
         "notifies": {
-            "0.4167": [
+            "0.4375": [
                 {
                     "name": "attck",
                     "state": 1
@@ -96,6 +112,10 @@ AnimMeta = {
             ]
         },
         "extra": {}
+    },
+    "animation.weapons.bolt.gunsmith2": {
+        "loop": "hold_on_last_frame",
+        "length": -1
     },
     "animation.template.pistol.hold": {
         "loop": "hold_on_last_frame",
