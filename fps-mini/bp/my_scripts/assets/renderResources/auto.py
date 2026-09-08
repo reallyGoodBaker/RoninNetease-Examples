@@ -9,6 +9,7 @@ Asset = {
         'eyepiece': 'eyepiece',
     },
     'texture': 'textures/entity/weapons/auto',
+    'metalTexture': 'textures/entity/weapons/auto_metal',
     'render': {
         'first_person': [
             'controller.render.template.mp18',

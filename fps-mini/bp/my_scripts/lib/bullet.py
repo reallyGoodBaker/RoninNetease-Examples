@@ -56,9 +56,11 @@ class BulletBase(object):
         self.dFrameTime = 0
         self.clientEntity = ClientBulletSystem.getInstance().spawnEntity(
             asset['modelAsset']['bulletEntity'],
-            (x, y + 100, z),
+            (x, y, z),
             (0, 0)
         )
+        modelComp = compClient.CreateModel(self.clientEntity)
+        modelComp.SetEntityShadowShow(False)
 
 
     def getPayload(self, type):

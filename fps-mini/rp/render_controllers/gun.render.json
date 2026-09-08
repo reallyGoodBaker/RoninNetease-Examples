@@ -4,7 +4,8 @@
         "controller.render.template.weapon": {
             "geometry": "geometry.default",
             "textures": [
-                "texture.weapon"
+                "texture.weapon",
+                "texture.metal"
             ],
             "materials": [
                 {
@@ -42,7 +43,8 @@
         "controller.render.template.mp18": {
             "geometry": "geometry.default",
             "textures": [
-                "texture.weapon"
+                "texture.weapon",
+                "texture.metal"
             ],
             "materials": [
                 {
@@ -138,7 +140,8 @@
                 }
             ],
             "textures": [
-                "texture.weapon"
+                "texture.weapon",
+                "texture.metal"
             ],
             "overlay_color": {
                 "r": "query.mod.tint_color_r",

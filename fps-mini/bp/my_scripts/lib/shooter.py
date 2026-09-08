@@ -171,8 +171,23 @@ class ShooterSystem(ClientSubsystem):
         # If the gun was selected but the server has not returned its state yet,
         # hide the weapon and wait for GunClientSyncSystem.applyServerGunState().
         if weaponName and not serverReady:
-            # 如果手上已经是这把枪了，不要再 holster/draw，等服务器状态到来直接更新即可
+            # 如果手上已经是这把枪了，不要再 holster/draw，并清除可能存在的另一把枪的 pending
             if self.weapon and self.currentItemName == itemName:
+                self.pendingServerWeaponName = None
+                self.pendingServerItemName = None
+                self.pendingUid = None
+                self.pendingServerState = None
+                self.pendingServerUid = ''
+                # 如果正在切别的枪中途拐回到当前枪，取消这次切枪
+                if self.isSwitchingWeapon:
+                    self.changeToken += 1
+                    self.isSwitchingWeapon = False
+                    self.switchPhase = None
+                    self.pendingWeaponName = None
+                    self.pendingItemName = None
+                    self.pendingAmmoCount = None
+                    self.pendingUid = None
+                    self.currentDrawKey = None
                 return
             self.pendingServerWeaponName = weaponName
             self.pendingServerItemName = itemName

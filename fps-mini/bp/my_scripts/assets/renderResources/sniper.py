@@ -9,6 +9,7 @@ Asset = {
         'eyepiece': 'eyepiece',
     },
     'texture': 'textures/entity/weapons/bolt',
+    'metalTexture': 'textures/entity/weapons/bolt_metal',
     'render': {
         'first_person': [
             'controller.render.template.weapon',

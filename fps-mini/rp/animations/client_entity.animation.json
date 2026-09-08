@@ -4,9 +4,6 @@
         "animation.client_entity.casing": {
             "loop": true,
             "bones": {
-                "root": {
-                    "position": [0, 1024, 0]
-                },
                 "casing": {
                     "rotation": [
                         "q.target_x_rotation",
@@ -22,7 +19,7 @@
                 "position": {
                     "position": [
                         "q.mod.x * 16",
-                        "(q.mod.y - 100) * 16",
+                        "q.mod.y * 16",
                         "-q.mod.z * 16"
                     ]
                 },

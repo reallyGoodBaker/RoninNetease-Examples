@@ -78,6 +78,8 @@ def applyRenderResource(renderer, asset, renderParams):
     for k, v in asset['materials'].items():
         renderer.AddPlayerRenderMaterial(k, v)
     renderer.AddPlayerTexture('weapon', asset['texture'])
+    if asset.get('metalTexture'):
+        renderer.AddPlayerTexture('metal', asset['metalTexture'])
     first = asset['render']['first_person']
     third = asset['render']['third_person']
     renderParams.first = first

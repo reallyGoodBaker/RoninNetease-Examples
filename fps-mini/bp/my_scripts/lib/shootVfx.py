@@ -495,9 +495,10 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         x, y, z = tup(getBonePosition(self.localId, 'ejection'))
         entityId = self.spawnEntity(
             model,
-            (x, y - 64, z),
+            (x, y, z),
             clientApi.GetRotFromDir(self.cam.GetCameraRotation())
         )
+        compClient.CreateModel(entityId).SetEntityShadowShow(False)
         if not entityId:
             return
         caseMovement = createComponent(entityId, CaseMovement) # type: CaseMovement
