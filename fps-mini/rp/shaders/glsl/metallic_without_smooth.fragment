@@ -31,22 +31,17 @@ void main()
         discard;
     }
 
-    // 金属参数贴图：R=metalness, G=roughness, B=AO
+    // 金属参数贴图：R=metalness, G=roughness, B=AO, A=tintMask
     vec4 metalMap = texture2D(TEXTURE_1, uv);
     float metalness = clamp(metalMap.r, 0.0, 1.0);
     float emissive = clamp(metalMap.g, 0.0, 1.0);
     float roughness = clamp(metalMap.b, 0.0, 1.0);
-    float tintMaskRaw = clamp(metalMap.a, 0.0, 1.0);
-    float tintMask = 4.0 * tintMaskRaw * (1.0 - tintMaskRaw);
-
-    // 染色强度随 metalness 变化：金属度越高染得越轻，越低染得越重
-    float tintAlpha = clamp(OVERLAY_COLOR.a, 0.0, 1.0);
-    float tintStrength = mix(0.7, 0.1, metalness) * tintMask;
+    float tintMask = 1.0 - clamp(metalMap.a, 0.00001, 1.0);
 
     // wood uses albedo (birch), metal uses external base color
     // 金属基础色使用各自贴图的 albedo，让每把枪保持自己的金属色
     vec3 baseColor = albedo.rgb;
-    baseColor = mix(baseColor, OVERLAY_COLOR.rgb, tintAlpha * tintStrength);
+    baseColor = mix(baseColor, OVERLAY_COLOR.rgb, tintMask);
     vec3 albedoRgb = baseColor;
 
     // flat shading normal
