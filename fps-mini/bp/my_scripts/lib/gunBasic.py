@@ -195,7 +195,7 @@ class GunBasic(object):
             if name.startswith('__'):
                 continue
             try:
-                asset = Asset('attachments.' + name).load(True)
+                asset = Asset('attachments.' + name).load()
             except Exception:
                 asset = None
             if asset and asset.get('attachmentId') == attachmentId:
@@ -209,7 +209,7 @@ class GunBasic(object):
                 if sub.startswith('__'):
                     continue
                 try:
-                    subAsset = Asset('attachments.' + name + '.' + sub).load(True)
+                    subAsset = Asset('attachments.' + name + '.' + sub).load()
                 except Exception:
                     continue
                 if subAsset and subAsset.get('attachmentId') == attachmentId:
@@ -237,7 +237,7 @@ class GunBasic(object):
             asset = self._findAttachmentAsset(attachmentId)
             if asset is None and slot.get('attachmentAsset'):
                 try:
-                    defaultAsset = Asset(slot['attachmentAsset']).load(True)
+                    defaultAsset = Asset(slot['attachmentAsset']).load()
                 except Exception:
                     defaultAsset = None
                 if defaultAsset and defaultAsset.get('attachmentId') == attachmentId:
@@ -254,7 +254,7 @@ class GunBasic(object):
             if not attachmentAsset:
                 continue
             try:
-                defaultAsset = Asset(attachmentAsset).load(True)
+                defaultAsset = Asset(attachmentAsset).load()
             except Exception:
                 defaultAsset = None
             if defaultAsset:
@@ -408,7 +408,7 @@ class GunBasic(object):
         if not self.canOperate():
             return
         if uri in self.feed['ammoType']:
-            self.bullet = Asset(uri).load(True)
+            self.bullet = Asset(uri).load()
             self.curState = GunState.Hold
             if not self.bolt:
                 raise ValueError('Bullet should not be "None"')
@@ -689,7 +689,7 @@ class GunBasic(object):
         isManual = self.bolt['cycleMode'] == 'manual'
 
         for ammoAssetId in self.feed['ammoType']:
-            ammoId = Asset(ammoAssetId).load(True)['itemType']
+            ammoId = Asset(ammoAssetId).load()['itemType']
             if ammoId != bulletItemType:
                 continue
             count = self.findAmmoCountInInv(ammoId)

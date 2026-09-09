@@ -37,11 +37,13 @@ void main()
     float emissive = clamp(metalMap.g, 0.0, 1.0);
     float roughness = clamp(metalMap.b, 0.0, 1.0);
     float tintMask = 1.0 - clamp(metalMap.a, 0.00001, 1.0);
+    // overlay alpha is the global dye strength; multiply it by the tint mask.
+    float overlayAmount = tintMask * clamp(OVERLAY_COLOR.a, 0.0, 1.0);
 
     // wood uses albedo (birch), metal uses external base color
     // 金属基础色使用各自贴图的 albedo，让每把枪保持自己的金属色
     vec3 baseColor = albedo.rgb;
-    baseColor = mix(baseColor, OVERLAY_COLOR.rgb, tintMask);
+    baseColor = mix(baseColor, OVERLAY_COLOR.rgb, overlayAmount);
     vec3 albedoRgb = baseColor;
 
     // flat shading normal

@@ -113,5 +113,13 @@ Asset = {
             'category': 'fovScale',              # 槽位分类, 自由字符串
             'displayName': 'slot.fov_scale.name', # 槽位的名称，可以使用lang文件中的键
         },
+        {
+            'slotId': 'appearance',                     # 槽位 id，在当前武器应该为唯一
+            'cameraAligned': 'camera',                  # 选择这个配件时，对齐的相机
+            'type': 'appearance',                       # 槽位类型，appearance为皮肤和染色
+            'attachmentAsset': 'attachments.appearance.m1911',
+            'category': 'appearance_m1911',                   # 槽位分类, 自由字符串
+            'displayName': 'slot.appearance.name',      # 槽位的名称，可以使用lang文件中的键
+        }
     ]
 }

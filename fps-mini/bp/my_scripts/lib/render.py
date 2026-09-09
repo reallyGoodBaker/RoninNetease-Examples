@@ -125,8 +125,8 @@ def registerWeaponAnimations(entityId, weaponName):
     animEx = getOrCreateComponent(entityId, AnimationExComponent)
     animEx.registerMetadatas(AnimMeta)
     animEx.clearRegisteredAnimations()
-    animEx.registerAnimations(Asset('animations.' + weaponName).load(True))
-    for name, easingDef in Asset('easings.' + weaponName).load(True).items():
+    animEx.registerAnimations(Asset('animations.' + weaponName).load())
+    for name, easingDef in Asset('easings.' + weaponName).load().items():
         animEx.registerEasing(name, easingDef)
     animEx.updateActorAnimDef()
 
@@ -178,7 +178,7 @@ class WeaponRenderSystem(ClientSubsystem):
 
         applyRenderResource(
             renderer,
-            Asset('renderResources.' + assetUri).load(True),
+            Asset('renderResources.' + assetUri).load(),
             getOrCreateComponent(entity, LocalPlayerRenderParams)
         )
         if entity != localPlayerId():

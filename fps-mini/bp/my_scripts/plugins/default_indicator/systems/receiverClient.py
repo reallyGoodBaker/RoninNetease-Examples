@@ -114,17 +114,15 @@ class PlayerIndicatorHud(UiSubsystem):
             killedEntities.add(target)
             addTimer(1, lambda: killedEntities.remove(target), False)
 
-        color = isHeadShot and HEAD_SHOOT or kill and KILL or NORMAL_HIT
-
         if kill:
-            self.setIndicatorColor(self.kill, color)
-            self.killRemains = KILL_DURATION
             self.kill.SetVisible(True)
+            self.setIndicatorColor(IndicatorType.Kill, HEAD_SHOOT if isHeadShot else KILL)
+            self.killRemains = KILL_DURATION
             self.killIndicators.addKill(isHeadShot)
         else:
-            self.setIndicatorColor(self.hit, color)
-            self.hitRemains = HIT_DURATION
             self.hit.SetVisible(True)
+            self.setIndicatorColor(IndicatorType.Hit, HEAD_SHOOT if isHeadShot else NORMAL_HIT)
+            self.hitRemains = HIT_DURATION
 
         self.damageAcc += ev.damage
         self.damageRemains = 6
@@ -164,7 +162,7 @@ class PlayerIndicatorHud(UiSubsystem):
 
     def setIndicatorColor(self, type, color):
         # type: (IndicatorType, tuple) -> None
-        images = type == IndicatorType.Hit and self.hitImages or self.killImages
+        images = self.hitImages if type == IndicatorType.Hit else self.killImages
         for img in images:
             img.SetSpriteColor(color)
 

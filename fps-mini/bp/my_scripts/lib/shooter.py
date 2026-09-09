@@ -286,14 +286,12 @@ class ShooterSystem(ClientSubsystem):
     def _applyServerStateIfReady(self):
         # type: () -> None
         """Apply canonical server state after the new weapon is actually built."""
-        try:
-            from .gunClientSync import GunClientSyncSystem
-            sync = GunClientSyncSystem.getInstance()
-            state = sync.getCanonicalState()
-            if state and state.get('itemName') == self.currentItemName:
-                self.applyServerGunState(state, sync.getCurrentUid())
-        except Exception as errorObject:
-            print '[Shooter] apply server state exception:', repr(errorObject)
+        from .gunClientSync import GunClientSyncSystem
+        sync = GunClientSyncSystem.getInstance()
+        state = sync.getCanonicalState()
+        if state and state.get('itemName') == self.currentItemName:
+            self.applyServerGunState(state, sync.getCurrentUid())
+
 
     def _finishChangeWeapon(self, weaponName, token, itemName=None, ammoCount=None, uid=None):
         if token != self.changeToken:
@@ -417,7 +415,6 @@ class ShooterSystem(ClientSubsystem):
         # type: (dict) -> None
         from .tint import applyAppearance
         appearance = state.get('appearance')
-        print '[Shooter] apply appearance state:', appearance
         applyAppearance(appearance)
 
 

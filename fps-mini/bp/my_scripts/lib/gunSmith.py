@@ -113,7 +113,7 @@ class GunSmithUi(UiSubsystem):
             if name.startswith('__'):
                 continue
             try:
-                asset = Asset('attachments.' + name).load(True)
+                asset = Asset('attachments.' + name).load()
             except Exception:
                 asset = None
             if isinstance(asset, dict):
@@ -127,7 +127,7 @@ class GunSmithUi(UiSubsystem):
                 if sub.startswith('__'):
                     continue
                 try:
-                    subAsset = Asset('attachments.' + name + '.' + sub).load(True)
+                    subAsset = Asset('attachments.' + name + '.' + sub).load()
                 except Exception:
                     continue
                 if isinstance(subAsset, dict):
@@ -155,7 +155,7 @@ class GunSmithUi(UiSubsystem):
         if not attachId:
             if pivotSlot.get('attachmentAsset'):
                 try:
-                    defaultAsset = Asset(pivotSlot['attachmentAsset']).load(True)
+                    defaultAsset = Asset(pivotSlot['attachmentAsset']).load()
                 except Exception:
                     defaultAsset = None
                 texture = defaultAsset.get('texture') if defaultAsset else TEXTURE_NONE
@@ -318,6 +318,15 @@ class GunSmithUi(UiSubsystem):
         except Exception as errorObject:
             print '[GunSmith] save appearance exception:', repr(errorObject)
 
+    def _hasCustomAppearance(self):
+        # type: () -> bool
+        """Whether the player has already picked/stored a custom tint color.
+
+        Equipping an appearance/skin alone does not count: with no custom
+        appearance the overlay must stay at alpha 0 until the palette is used.
+        """
+        return isinstance(self.appearanceData, dict) and bool(self.appearanceData)
+
     def _showPaletteForSlot(self, slot):
         # type: (dict) -> None
         if not self.palette:
@@ -326,11 +335,15 @@ class GunSmithUi(UiSubsystem):
         self.palette.SetVisible(isAppearance)
         if isAppearance:
             self._loadAppearanceToPalette()
-            self._applyPaletteColor()
+            if self._hasCustomAppearance():
+                self._applyPaletteColor()
+            else:
+                self._clearPaletteColor()
             self._updatePickerPureColor()
-        elif self._hasAppearanceSelected():
-            # The appearance is still equipped; keep the saved tint visible
-            # while browsing other slots.
+        elif self._hasAppearanceSelected() and self._hasCustomAppearance():
+            # The appearance is still equipped; keep the player-chosen tint
+            # visible while browsing other slots. Never invent a color from
+            # palette defaults before the player has used the palette.
             self._loadAppearanceToPalette()
             self._applyPaletteColor()
             self._saveAppearance()
@@ -353,7 +366,7 @@ class GunSmithUi(UiSubsystem):
         defaultAttachment = None
         if slot.get('attachmentAsset'):
             try:
-                defaultAttachment = Asset(slot['attachmentAsset']).load(True)
+                defaultAttachment = Asset(slot['attachmentAsset']).load()
             except Exception:
                 defaultAttachment = None
 
@@ -387,7 +400,7 @@ class GunSmithUi(UiSubsystem):
             return self.attachmentsData.get(slotId)
         if slot.get('attachmentAsset'):
             try:
-                asset = Asset(slot['attachmentAsset']).load(True)
+                asset = Asset(slot['attachmentAsset']).load()
             except Exception:
                 asset = None
             if asset:

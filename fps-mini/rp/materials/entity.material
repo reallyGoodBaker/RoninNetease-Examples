@@ -6,9 +6,6 @@
         },
         "metallic_without_smooth:entity_alphatest": {
             "fragmentShader": "shaders/glsl/metallic_without_smooth.fragment",
-            "-defines": [
-                "DisableCulling"
-            ],
             "-states": [
                 "DisableCulling"
             ],

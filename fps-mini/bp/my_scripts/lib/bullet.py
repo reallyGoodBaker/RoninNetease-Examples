@@ -28,11 +28,12 @@ class BulletBase(object):
         # type: (dict, float, Vector3, Vector3) -> None
         projectile = asset['projectile']
         localId = localPlayerId()
-        self.ignoreEntities = Asset(projectile['ignoreEntities']).load(True)
+        self.ignoreEntities = Asset(projectile['ignoreEntities']).load()
+        self.ignoreBlocks = Asset(projectile['ignoreBlocks']).load()
         self.caliber = projectile['caliber']
         self.payloads = asset['payloads']
         self.penetrate = asset['penetrate']
-        self.penetrateBlocks = Asset(self.penetrate['penetrateBlocks']).load(True)
+        self.penetrateBlocks = Asset(self.penetrate['penetrateBlocks']).load()
         self.destroy = asset['destroy']
         self.initialSpeed = projectile['baseSpeed'] * velocityModifier # type: float
         self.gravity = vec((0, projectile['gravity'], 0)) # type: Vector3
@@ -182,6 +183,8 @@ class BulletBase(object):
     def handleHitBlock(self, result, clientBullet):
         # type: (dict, ClientBulletSystem) -> bool | None
         blockType = result['identifier']
+        if blockType in self.ignoreBlocks:
+            return False
         if self.speed >= self.penetrate['minPenetrateSpeed']:
             return self.handlePenetrateBlock(blockType, result['pos'], result['hitPos'], clientBullet)
         else:
@@ -227,7 +230,7 @@ class BulletBase(object):
     def calcDamage(self, isHeadShot, kinetic, overPun=False):
         headShotMul = (kinetic['headshotMultiplier'] * int(isHeadShot)) or 1
         baseDamage = kinetic['baseDamage']
-        damageMul = Asset(kinetic['damageCurve']).load(True) # type: Curve
+        damageMul = Asset(kinetic['damageCurve']).load() # type: Curve
         overpenMul = not overPun and 1 or self.penetrate['damageRetentionPerPass']
         return baseDamage, damageMul.getValue(self.speed) * overpenMul * headShotMul
 

@@ -16,6 +16,7 @@ Asset = {
         'caliber': '762',             # 口径标识 (string), 作为 customTag 传入 hurt 组件
         'bounce': False,                # 子弹可弹跳（比如榴弹）
         'ignoreEntities': 'penetrate.entities',     # 子弹不处理的实体
+        'ignoreBlocks': 'penetrate.blocks',         # 子弹不处理的方块
     },
 
     # 子弹销毁条件
