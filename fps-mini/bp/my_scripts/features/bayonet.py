@@ -7,7 +7,7 @@ from ..engine.architect.compact import (
     Component, BaseCompClient,
     StateNode,
     Sched, Query, DeltaTime, EntityId,
-    addTimer,
+    addTimer, vec,
 )
 from ..engine.architect.math.double import clamp, inf
 from ..engine.architect.math.utils import forward
@@ -227,4 +227,4 @@ class BayonetFeatureSystem(ClientSubsystem):
             return
         if bayonet.enabled and bayonet.remains > 0:
             bayonet.remains = clamp(bayonet.remains - dt, 0, inf)
-            motion.motion = forward(entityId) * dt * 100
+            motion.motion = forward(entityId) * dt * 100 + vec((0, -0.3, 0))

@@ -96,7 +96,7 @@ Asset = {
             'spreadMultiplier': 0.5,
         },
         'walk': {
-            'animation': '',
+            'animation': 'fp.hold',
             'spread': 1,
         },
         'sprint': {

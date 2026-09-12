@@ -338,8 +338,7 @@ class WalkingState(StateNode):
         if tree.isSwitchingWeapon:
             return
         animWalk = tree.weapon.modify(stats.animWalk)
-        if animWalk:
-            tree.animEx.play(animWalk)
+        tree.animEx.play(animWalk)
 
     def update(self, tree):
         # type: (ShooterStateTreeComponent) -> None

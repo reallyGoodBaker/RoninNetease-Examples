@@ -3,7 +3,7 @@ Asset = {
     'third_model': 'geometry.template.third.bolt',
     'arms': 'geometry.arms.mp18',
     'materials': {
-        'weapon': 'metallic_without_smooth',
+        'weapon': 'pbr_tint',
         'glow': 'entity_emissive_alpha',
         'scope': 'scope',
         'eyepiece': 'eyepiece',

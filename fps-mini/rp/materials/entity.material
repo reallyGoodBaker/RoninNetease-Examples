@@ -4,8 +4,8 @@
         "scope:entity_alphatest": {
             "fragmentShader": "shaders/glsl/scope_mark.fragment"
         },
-        "metallic_without_smooth:entity_alphatest": {
-            "fragmentShader": "shaders/glsl/metallic_without_smooth.fragment",
+        "pbr_tint:entity_alphatest": {
+            "fragmentShader": "shaders/glsl/pbr_tint.fragment",
             "-states": [
                 "DisableCulling"
             ],

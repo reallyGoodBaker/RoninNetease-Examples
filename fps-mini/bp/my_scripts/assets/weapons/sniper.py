@@ -96,7 +96,7 @@ Asset = {
             'vignette': 0.2,            # 暗角范围
         },
         'walk': {
-            'animation': '',
+            'animation': 'fp.hold',
             'spread': 1,
         },
         'sprint': {
