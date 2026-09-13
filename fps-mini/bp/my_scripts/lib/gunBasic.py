@@ -10,6 +10,7 @@ from ..engine.architect.compact import (
     getOrCreateSingletonComponent,
 )
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
+from ..engine.architect.plugins.animation.enum import AnimationEasingTypes
 
 from .shootVfx import PlayerShooterVfxSystem
 from .bullet import ClientBulletSystem
@@ -91,6 +92,10 @@ class GunBasic(object):
     attachments = {}
     attachmentCache = {}
     categories = {} # type: dict[str, ModifierCategory]
+    # 换弹两处切换的缓动时长(秒): openbolt -> 装填动画, 装填动画 -> closebolt
+    RELOAD_BLEND_TIME = 0.3
+    # 换弹两处切换的缓动曲线: SMOOTH(两头缓) / SINE / QUAD_OUT / CUBIC_OUT / LINEAR
+    RELOAD_BLEND_EASING = AnimationEasingTypes.SMOOTH
 
 
     def __init__(self, asset, ammoCount=None):
@@ -671,6 +676,25 @@ class GunBasic(object):
             )
 
 
+    def _playBoltCloseWithBlend(self, isManual, restoreBolt):
+        # type: (bool, function) -> None
+        """
+        装填结束/被打断后关闭枪机: 缓动 RELOAD_BLEND_TIME 秒到 closebolt 首帧,
+        缓动期间 closebolt 定格首帧, 装填动画保持末帧姿态淡出。
+        关栓计时要把这段定格时间补上, 否则动画没播完就会被 restoreBolt 打断。
+
+        只有手动枪机 (closebolt 和装填动画同在 default 层) 才做缓动;
+        自动枪机的 closebolt 在 bolt 层, 上一个是滑套开膛动画, 保持原来的硬切。
+        """
+        layer = isManual and 'default' or 'bolt'
+        blend = self.animEx.playBlendInFirstFrame(
+            self.bolt['boltCloseAnim'], layer=layer,
+            duration=self.RELOAD_BLEND_TIME if isManual else 0.0,
+            easing=self.RELOAD_BLEND_EASING,
+        )
+        self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'] + blend, restoreBolt, False)
+
+
     @Async
     def reload(self):
         magazineCapacity = self.modify(stats.magazineCapacity)
@@ -724,7 +748,17 @@ class GunBasic(object):
             shouldUseCupPortBoltOpen or self.dropCasing()
 
         self.reloadAnimKey = reloadMode['animation']
-        self.animEx.play(reloadMode['animation'], replay=True)
+        if isManual:
+            # openbolt -> 装填: 缓动 RELOAD_BLEND_TIME 秒到装填动画首帧,
+            # 期间装填动画定格首帧, 枪机保持打开姿态淡出
+            reloadBlend = self.animEx.playBlendInFirstFrame(
+                reloadMode['animation'],
+                duration=self.RELOAD_BLEND_TIME,
+                easing=self.RELOAD_BLEND_EASING,
+            )
+        else:
+            reloadBlend = 0.0
+            self.animEx.play(reloadMode['animation'], replay=True)
 
         def doReload():
             if token != self.reloadToken:
@@ -751,8 +785,7 @@ class GunBasic(object):
                         self.boltOpend = False
                         self.firedCase = False
                         self.curState = GunState.Hold
-                    self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
-                    self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
+                    self._playBoltCloseWithBlend(isManual, restoreBolt)
                 else:
                     self.curState = GunState.Hold
                 return
@@ -767,27 +800,48 @@ class GunBasic(object):
                     self.firedCase = False
                     self.curState = GunState.Hold
 
-                self.animEx.play(self.bolt['boltCloseAnim'], isManual and 'default' or 'bolt')
-                self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'], restoreBolt, False)
+                self._playBoltCloseWithBlend(isManual, restoreBolt)
             else:
                 self.curState = GunState.Hold
 
-        self.reloadTimer = TimerAdapter(reloadMode['reloadTime'], doReload, False)
+        # 装填动画开头有 reloadBlend 秒的定格缓动, 计时要把这段补上
+        self.reloadTimer = TimerAdapter(reloadMode['reloadTime'] + reloadBlend, doReload, False)
         self.reloadTimer.start()
 
 
+    def isReloadModeUsable(self, mode, remains, capacity):
+        # type: (dict, int, int) -> bool
+        """
+        某个装填方式在当前弹匣状态下能不能用。
+
+        多个装填方式按 feed['reloadModes'] 的顺序从上往下取第一个可用的,
+        所以顺序就是优先级:
+          empty          - 弹匣完全打空 (remains == 0)
+          not_full       - 弹匣没满 (remains < capacity, 含空仓)
+          clip_available - 弹匣剩余空间放得下一个漏夹 (capacity - remains >= countPerClip)
+        """
+        condition = mode.get('condition')
+        if condition == 'empty':
+            return remains == 0
+        if condition == 'not_full':
+            return remains < capacity
+        if condition == 'clip_available':
+            countPerClip = mode.get('countPerClip', 0)
+            return countPerClip > 0 and capacity - remains >= countPerClip
+        return False
+
+
     def findProperReloadMode(self):
+        """
+        从上往下找第一个"当前状态能用"的装填方式, 找不到返回 None.
+
+        注意不是先按状态分流再看条件: 空仓时同样会把 not_full / clip_available
+        纳入候选, 避免出现"弹匣打空就只剩 empty 一条路"的情况。
+        """
         remains = self.bulletCount
         capacity = self.modify(stats.magazineCapacity)
         for mode in self.feed['reloadModes']:
-            condition = mode['condition']
-            if remains == 0 and condition == 'empty':
+            if self.isReloadModeUsable(mode, remains, capacity):
                 return mode
-            if 0 < remains < capacity and condition == 'not_full':
-                return mode
-            if condition == 'clip_available':
-                countPerClip = mode['countPerClip']
-                if capacity - remains >= countPerClip and capacity > countPerClip:
-                    return mode
         return None
 
