@@ -1,6 +1,13 @@
 class StatMapping:
     recoilY             = 'bolt.recoil.value.1'
     recoilX             = 'bolt.recoil.value.0'
+    shootRestoreTime    = 'bolt.shootRestoreTime'
+    boltOpenTime        = 'bolt.boltOpenTime'
+    boltCloseTime       = 'bolt.boltCloseTime'
+    cuppedPortOpenTime  = 'bolt.cuppedPortOpenTime'
+    animCuppedPort      = 'bolt.cuppedPortOpenBolt'
+    animBoltOpen        = 'bolt.boltOpenAnim'
+    animBoltClose       = 'bolt.boltCloseAnim'
 
     # trigger
     triggerDelay        = 'trigger.delay'
@@ -48,6 +55,13 @@ class StatMapping:
 class stats:
     recoilY          = 'recoilY'
     recoilX          = 'recoilX'
+    shootRestoreTime = 'shootRestoreTime'
+    boltOpenTime     = 'boltOpenTime'
+    boltCloseTime    = 'boltCloseTime'
+    cuppedPortOpenTime  = 'cuppedPortOpenTime'
+    animCuppedPort   = 'animCuppedPort'
+    animBoltOpen     = 'animBoltOpen'
+    animBoltClose    = 'animBoltClose'
     triggerDelay     = 'triggerDelay'
     magazineCapacity = 'magazineCapacity'
     reloadModes      = 'reloadModes'

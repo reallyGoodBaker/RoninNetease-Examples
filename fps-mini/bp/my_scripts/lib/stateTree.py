@@ -225,8 +225,9 @@ class FiringState(StateNode):
             return not tree.weapon.isFiring
         return not tree.weapon.isFiring or tree.player.isSprinting()
     
-    def exit(self, next, tree):
-        tree.weapon.firingDuration = 0
+    # 注意: 不在这里清零 firingDuration。
+    # 扩散累加量改为只在 换弹 / 切枪 / 收枪 时清零 (见 GunBasic.reload / GunBasic.cancelAll),
+    # 这样栓动 / 半自动也能跨发累积散布。
 
     def update(self, tree):
         # type: (ShooterStateTreeComponent) -> None
@@ -399,7 +400,7 @@ class IdleState(StateNode):
             return
 
         # 如果当前正在播放的是换弹动画（feed 里的 reloadModes），就不播 hold
-        for reloadMode in tree.weapon.feed.get('reloadModes', []):
+        for reloadMode in tree.weapon.modify(stats.reloadModes):
             animKey = reloadMode.get('animation')
             if animKey and tree.animEx.isPlaying(animKey):
                 return

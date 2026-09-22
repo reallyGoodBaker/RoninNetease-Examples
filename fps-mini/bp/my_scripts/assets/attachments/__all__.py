@@ -3,12 +3,16 @@
 
 from .appearance.__all__ import *
 
-from . import bayonet
-from . import template
-from . import fov1x
-from . import fov1_5x
-from . import fov2x
-from . import telescope10x
-from . import telescope3x
-from . import mp18_drum
-from . import mp18_magazine
+from . import (
+    bayonet,
+    template,
+    fov1_5x,
+    fov1x,
+    fov2x,
+    telescope3x,
+    telescope10x,
+    mp18_drum,
+    mp18_magazine,
+    smle_mk3_quickshoot,
+    mosin_obrez,
+)

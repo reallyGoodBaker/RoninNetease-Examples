@@ -17,6 +17,20 @@ from mod.client.component.actorRenderCompClient import ActorRenderCompClient
 FP_COND = 'v.is_first_person && !q.is_spectator'
 TP_COND = '!v.is_first_person && !v.map_face_icon && !q.is_spectator'
 
+# 切模型后需要"预热"的骨骼。
+# 网易的粒子绑定有 bug: 切模型后, 某个骨骼的第一次 getBonePosition 一定拿到错的值
+# (常见是 (0,0,0)), 所以每个会被查询的骨骼都要在切完模型后各自先查一次。
+# 以前这里只预热了 muzzle, 于是 muzzle 一直没问题, 而切枪后第一次抛壳(ejection)
+# 会拿到 (0,0,0) -> 弹壳生成到世界原点, 看起来就是"这一发没抛壳"。
+PRIMED_BONES = (
+    'muzzle',        # 子弹起点 / 枪口特效
+    'ejection',      # 抛壳位置
+    'camera',        # 以下都是武器的 cameraAligned 骨骼(开镜/配件视角)
+    'view_bayonet',
+    'magazine_view',
+    'tele_view',
+)
+
 def setNativeRenderControllerEnabled(renderer, enable=True):
     # type: (ActorRenderCompClient, bool) -> None
     if enable:
@@ -72,6 +86,8 @@ def applyRenderResource(renderer, asset, renderParams):
     renderer.AddPlayerGeometry('default', renderParams.geometry)
     renderer.RebuildPlayerRender()
 
+    for k, v in asset.get('sounds', {}).items():
+        renderer.AddPlayerSoundEffect(k, v)
     renderer.AddPlayerGeometry('default', asset['model'])
     renderer.AddPlayerGeometry('third_model', asset['third_model'])
     renderer.AddPlayerGeometry('arms', asset['arms'])
@@ -185,7 +201,9 @@ class WeaponRenderSystem(ClientSubsystem):
             registerWeaponAnimations(entity, assetUri)
         # 网易bug，切换模型后需要手动绑定一次粒子，
         # 不然之后第一次获取得到的结果一定是错的
-        getBonePosition(entity, 'muzzle')
+        # 注意每个骨骼要各自预热一次, 见 PRIMED_BONES
+        for boneName in PRIMED_BONES:
+            getBonePosition(entity, boneName)
 
 
     @EventListener()

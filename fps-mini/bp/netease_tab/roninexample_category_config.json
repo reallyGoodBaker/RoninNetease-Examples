@@ -1,9 +1,9 @@
 {
     "category": [
         {
-            "icon": "textures/item/weapons/auto",
-            "labelText": "示例武器",
-            "name": "weapons"
+            "icon": "textures/item/weapons/smle_mk3",
+            "labelText": "制式步枪",
+            "name": "standard_rifles"
         }
     ]
 }

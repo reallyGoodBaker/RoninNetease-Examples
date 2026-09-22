@@ -1,0 +1,32 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.dropped_weapon.carcano_m1891": {
+            "loop": true,
+            "bones": {
+                "fpsroot": {
+                    "position": [
+                        -3.261,
+                        -23.507,
+                        11.795
+                    ],
+                    "rotation": [
+                        0,
+                        0,
+                        90
+                    ],
+                    "scale": 0.684
+                },
+                "clip": {
+                    "scale": 0
+                },
+                "clip2": {
+                    "scale": 0
+                },
+                "clip_bullets": {
+                    "scale": 0
+                }
+            }
+        }
+    }
+}

@@ -157,6 +157,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         self.modelZScale = 1
         self.shootSpread = 0
         self.movementSpread = 0
+        self.minSpread = 0
 
         rot = self.cam.GetCameraRotation()
         self.lastXRot = rot[0]
@@ -269,7 +270,7 @@ class PlayerShooterVfxSystem(ClientSubsystem):
         crosshair = CrosshairHud.getInstance()
         if not crosshair: return
         fov = math.radians(self.cam.GetFov() * self.fovScale)
-        spread = self.movementSpread + self.shootSpread
+        spread = self.movementSpread + max(self.shootSpread, self.minSpread)
         offset = screenSize()[1] / (2 * math.tan(fov / 2)) * math.tan(math.radians(spread))
         crosshair.setOffset(offset)
 
@@ -498,9 +499,9 @@ class PlayerShooterVfxSystem(ClientSubsystem):
             (x, y, z),
             clientApi.GetRotFromDir(self.cam.GetCameraRotation())
         )
-        compClient.CreateModel(entityId).SetEntityShadowShow(False)
         if not entityId:
             return
+        compClient.CreateModel(entityId).SetEntityShadowShow(False)
         caseMovement = createComponent(entityId, CaseMovement) # type: CaseMovement
         caseMovement.velocity = tup(add(
             viewToWorld(vec(viewMotion), self.cam.GetForward(), (0.0, 1.0, 0.0)),

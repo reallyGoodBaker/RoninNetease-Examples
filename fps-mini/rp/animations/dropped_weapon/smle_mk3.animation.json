@@ -1,0 +1,32 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.dropped_weapon.smle_mk3": {
+            "loop": true,
+            "bones": {
+                "fpsroot": {
+                    "position": [
+                        -5.961,
+                        -24.054,
+                        13.635
+                    ],
+                    "rotation": [
+                        0,
+                        0,
+                        90
+                    ],
+                    "scale": 0.663
+                },
+                "clip": {
+                    "scale": 0
+                },
+                "clip_bullets": {
+                    "scale": 0
+                },
+                "single": {
+                    "scale": 0
+                }
+            }
+        }
+    }
+}

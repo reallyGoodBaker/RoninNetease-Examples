@@ -1,0 +1,11 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "components": {
+            "minecraft:icon": "ww1:berthier_m1916"
+        },
+        "description": {
+            "identifier": "ww1:berthier_m1916"
+        }
+    }
+}

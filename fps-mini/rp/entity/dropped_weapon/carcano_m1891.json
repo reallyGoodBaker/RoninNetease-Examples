@@ -1,0 +1,32 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "template:dropped_carcano_m1891",
+            "materials": {
+                "weapon": "pbr_tint",
+                "glow": "entity_emissive_alpha",
+                "scope": "scope",
+                "eyepiece": "eyepiece"
+            },
+            "textures": {
+                "weapon": "textures/entity/weapons/carcano_m1891",
+                "metal": "textures/entity/weapons/carcano_m1891_metal"
+            },
+            "geometry": {
+                "default": "geometry.ww1.carcano_m1891"
+            },
+            "animations": {
+                "place": "animation.dropped_weapon.carcano_m1891"
+            },
+            "scripts": {
+                "animate": [
+                    "place"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.template.weapon"
+            ]
+        }
+    }
+}

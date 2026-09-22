@@ -1,0 +1,84 @@
+{
+    "format_version": "1.12.0",
+    "render_controllers": {
+        "controller.render.mosin_nagant": {
+            "geometry": "geometry.default",
+            "textures": [
+                "texture.weapon",
+                "texture.metal"
+            ],
+            "materials": [
+                {
+                    "*": "material.weapon",
+                    "glow*": "material.glow",
+                    "scope_inner": "material.scope",
+                    "eyepiece": "material.eyepiece"
+                }
+            ],
+            "part_visibility": [
+                {
+                    "*": true
+                },
+                {
+                    "*arm": false
+                },
+                {
+                    "*sleeve": false
+                },
+                {
+                    "bayonet": "v.attach_bayonet ?? 0"
+                },
+                {
+                    "eyepiece": "!q.mod.is_aiming"
+                },
+                {
+                    "rifle": "!(v.obrez ?? 0)"
+                },
+                {
+                    "obrez": "(v.obrez ?? 0)"
+                }
+            ],
+            "smooth_normal": false,
+            "overlay_color": {
+                "r": "query.mod.tint_color_r",
+                "g": "query.mod.tint_color_g",
+                "b": "query.mod.tint_color_b",
+                "a": "query.mod.tint_color_a"
+            }
+        },
+        "controller.render.arm.mosin_nagant": {
+            "geometry": "geometry.arms",
+            "textures": [
+                "texture.default"
+            ],
+            "materials": [
+                {
+                    "*": "material.default"
+                }
+            ],
+            "part_visibility": [
+                {
+                    "*": false
+                },
+                {
+                    "*arm": "!q.mod.gunsmith"
+                },
+                {
+                    "*sleeve": "!q.mod.gunsmith"
+                },
+                {
+                    "clip*": "!q.mod.gunsmith"
+                },
+                {
+                    "single": "!q.mod.gunsmith"
+                },
+                {
+                    "fpsleftarm": "(v.show_lefthand ?? 1) && !q.mod.gunsmith"
+                },
+                {
+                    "fpsleftsleeve": "(v.show_lefthand ?? 1) && !q.mod.gunsmith"
+                }
+            ]
+        }
+    }
+}

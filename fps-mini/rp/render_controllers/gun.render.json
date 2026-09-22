@@ -101,6 +101,12 @@
                 },
                 {
                     "*sleeve": "!q.mod.gunsmith"
+                },
+                {
+                    "clip*": "!q.mod.gunsmith"
+                },
+                {
+                    "single": "!q.mod.gunsmith"
                 }
             ]
         },

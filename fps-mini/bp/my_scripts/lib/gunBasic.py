@@ -8,6 +8,7 @@ from ..engine.architect.compact import (
     TimerAdapter, addTimer, cancelTimer,
     dictx, NamedEntityVariable,
     getOrCreateSingletonComponent,
+    QueryVariable,
 )
 from ..engine.architect.plugins.animation.components.animClient import AnimationExComponent
 from ..engine.architect.plugins.animation.enum import AnimationEasingTypes
@@ -17,6 +18,9 @@ from .bullet import ClientBulletSystem
 from .stats import StatMapping, stats
 from .feature import LocalFeaturesComponent
 
+
+strikerReady = QueryVariable('striker_ready')
+ammoCountVariable = QueryVariable('ammo_count')
 
 
 class GunState:
@@ -125,6 +129,7 @@ class GunBasic(object):
         self._onAmmoChanged = callback
 
     def _notifyAmmoChanged(self):
+        ammoCountVariable.setValue(localPlayerId(), self.bulletCount)
         if self._onAmmoChanged:
             self._onAmmoChanged(self.bulletCount)
 
@@ -352,6 +357,8 @@ class GunBasic(object):
         self.nextFireTime = 0
         self.autoFireInterval = self.bolt['boltOpenTime'] + self.bolt['boltCloseTime']
         self.stun = None
+        ammoCountVariable.setValue(localPlayerId(), self.bulletCount)
+        strikerReady.setValue(localPlayerId(), 1)
 
     def modify(self, stat, pathTo=None, default=0):
         if not pathTo:
@@ -486,10 +493,10 @@ class GunBasic(object):
 
         if not self.boltOpend:
             animEx.play(
-                self.bolt['boltOpenAnim'],
+                self.modify(stats.animBoltOpen),
                 animLayer
             )
-            yield self.wait(self.bolt['boltOpenTime'])
+            yield self.wait(self.modify(stats.boltOpenTime))
             if token != self.actionToken:
                 return
             self.boltOpend = True
@@ -520,12 +527,13 @@ class GunBasic(object):
             return
 
         animEx.play(
-            self.bolt['boltCloseAnim'],
+            self.modify(stats.animBoltClose),
             animLayer
         )
-        yield self.wait(self.bolt['boltCloseTime'])
+        yield self.wait(self.modify(stats.boltCloseTime))
         if token != self.actionToken:
             return
+        strikerReady.setValue(localPlayerId(), 1)
         self.boltOpend = False
         self.curState = GunState.Hold
 
@@ -560,6 +568,10 @@ class GunBasic(object):
         return True
 
 
+    # 手动枪机不能拉栓(跑动/换弹中)时, 隔多久重试一次
+    MANUAL_CYCLE_RETRY = 0.05
+
+
     SPREAD_FUNC = {
         'OneMinus': lambda s, x: 1 - math.exp(-s * x),
         'Native': lambda s, x: math.exp(-s * x)
@@ -567,7 +579,7 @@ class GunBasic(object):
 
 
     def calcSpread(self):
-        spreadConf = self.barrel['spread']
+        spreadConf = self.modify(stats.spread)
         strength = spreadConf['strength']
         maxSpread = spreadConf['maxSpread']
         minSpread = spreadConf['minSpread']
@@ -583,6 +595,8 @@ class GunBasic(object):
         self.isFiring = True
         token = self.actionToken
         spreadMul = self.aiming and self.modify(stats.spreadMultiplier, default=1) or 1
+        self.calcSpread()
+        self.vfxSystem.shootSpread = self.shootSpread
         self.vfxSystem.shootCamVfx(
             self.modify(stats.fireSound),
             (
@@ -593,7 +607,7 @@ class GunBasic(object):
         self.bulletSystem.createBulletFromFacing(
             self.bullet, self.modify(stats.velocityModifier), self.vfxSystem.applySpreadOffset(spreadMul)
         )
-        self.calcSpread()
+        strikerReady.setValue(localPlayerId(), 0)
         self.animEx.play(self.modify(stats.animShoot), replay=True, noBlending=True)
         self.firedCase = True
 
@@ -606,11 +620,20 @@ class GunBasic(object):
                 self.nextFireTime += self.autoFireInterval
 
         if self.bolt['cycleMode'] == 'manual':
-            yield self.wait(self.bolt['shootRestoreTime'])
+            yield self.wait(self.modify(stats.shootRestoreTime))
             if token != self.actionToken:
                 self.isFiring = False
                 return
-            if not self.canCycle:
+            # 跑动(SprintingState 会把 canCycle 置 False)或换弹中不能拉栓。
+            # 这里不能像以前那样直接放弃: 放弃等于这一发的枪机永远不拉,
+            # 而弹壳是在拉栓(开栓)时才抛的, 结果就是"这一发没有抛壳"。
+            # 所以等能拉栓了再补上; 期间玩家自己按扳机拉过栓的话 firedCase 已清, 不重复拉。
+            while self.firedCase and not self.canCycle:
+                yield self.wait(self.MANUAL_CYCLE_RETRY)
+                if token != self.actionToken:
+                    self.isFiring = False
+                    return
+            if not self.firedCase:
                 self.isFiring = False
                 return
 
@@ -659,6 +682,9 @@ class GunBasic(object):
         self.pressingTrigger = False
         self.stun = None
         self.curState = GunState.Hold
+        # 切枪 / 收枪: 清零扩散累积
+        self.firingDuration = 0
+        self.shootSpread = 0
 
 
     def shouldUseCupPortBoltOpen(self):
@@ -688,11 +714,11 @@ class GunBasic(object):
         """
         layer = isManual and 'default' or 'bolt'
         blend = self.animEx.playBlendInFirstFrame(
-            self.bolt['boltCloseAnim'], layer=layer,
+            self.modify(stats.animBoltClose), layer=layer,
             duration=self.RELOAD_BLEND_TIME if isManual else 0.0,
             easing=self.RELOAD_BLEND_EASING,
         )
-        self.boltCloseTimer = addTimer(self.bolt['boltCloseTime'] + blend, restoreBolt, False)
+        self.boltCloseTimer = addTimer(self.modify(stats.boltCloseTime) + blend, restoreBolt, False)
 
 
     @Async
@@ -701,6 +727,9 @@ class GunBasic(object):
         if self.bulletCount >= magazineCapacity or self.reloadTimer:
             return
 
+        # 换弹: 清零扩散累积
+        self.firingDuration = 0
+        self.shootSpread = 0
         self.reloadToken += 1
         token = self.reloadToken
         self.reloadBuffered = False
@@ -733,14 +762,14 @@ class GunBasic(object):
         if isManual and not self.boltOpend:
             shouldUseCupPortBoltOpen = self.shouldUseCupPortBoltOpen()
             self.animEx.play(
-                shouldUseCupPortBoltOpen                \
-                    and self.bolt['cuppedPortOpenBolt'] \
-                    or self.bolt['boltOpenAnim'],
+                shouldUseCupPortBoltOpen                    \
+                    and self.modify(stats.animCuppedPort)   \
+                    or self.modify(stats.animBoltOpen),
             )
             yield self.wait(
-                shouldUseCupPortBoltOpen                \
-                    and self.bolt['cuppedPortOpenTime'] \
-                    or self.bolt['boltOpenTime']
+                shouldUseCupPortBoltOpen                        \
+                    and self.modify(stats.cuppedPortOpenTime)   \
+                    or self.modify(stats.boltOpenTime)
             )
             if token != self.reloadToken:
                 return
@@ -785,6 +814,7 @@ class GunBasic(object):
                         self.boltOpend = False
                         self.firedCase = False
                         self.curState = GunState.Hold
+                        strikerReady.setValue(localPlayerId(), 1)
                     self._playBoltCloseWithBlend(isManual, restoreBolt)
                 else:
                     self.curState = GunState.Hold
@@ -840,7 +870,7 @@ class GunBasic(object):
         """
         remains = self.bulletCount
         capacity = self.modify(stats.magazineCapacity)
-        for mode in self.feed['reloadModes']:
+        for mode in self.modify(stats.reloadModes):
             if self.isReloadModeUsable(mode, remains, capacity):
                 return mode
         return None

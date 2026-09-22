@@ -1,0 +1,11 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "components": {
+            "minecraft:icon": "ww1:mosin_nagant"
+        },
+        "description": {
+            "identifier": "ww1:mosin_nagant"
+        }
+    }
+}

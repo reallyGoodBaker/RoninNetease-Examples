@@ -29,7 +29,6 @@ Asset = {
     # 子弹穿透设置
     'penetrate': {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
-        'damageRetentionPerPass': 0.5,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.5,            # 每次穿透后速度保留比例
         'minPenetrateSpeed': 260,                   # 最小穿透速度
     },

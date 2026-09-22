@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-
-# ============================================
-# 子弹配置模板
-# 子弹 = projectile (弹道核心) + payloads[] (弹头载荷数组)
-# ============================================
-
 Asset = {
     'itemType': 'roninexample:ammo556',
 
@@ -29,7 +23,6 @@ Asset = {
     # 子弹穿透设置
     'penetrate': {
         'penetrateBlocks': 'penetrate.template',    # 可穿透方块数组 Asset
-        'damageRetentionPerPass': 0.7,              # 每次穿透后伤害保留比例
         'velocityRetentionPerPass': 0.7,            # 每次穿透后速度保留比例
         'minPenetrateSpeed': 420,                   # 最小穿透速度
     },

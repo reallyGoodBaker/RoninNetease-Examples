@@ -9,6 +9,24 @@
         },
         "roninexample:pistol": {
             "textures": "textures/item/weapons/pistol"
+        },
+        "ww1:ross_mk3": {
+            "textures": "textures/item/weapons/ross_mk3"
+        },
+        "ww1:gewehr98": {
+            "textures": "textures/item/weapons/gewehr98"
+        },
+        "ww1:berthier_m1916": {
+            "textures": "textures/item/weapons/berthier_m1916"
+        },
+        "ww1:carcano_m1891": {
+            "textures": "textures/item/weapons/carcano_m1891"
+        },
+        "ww1:gewehr_m95": {
+            "textures": "textures/item/weapons/gewehr_m95"
+        },
+        "ww1:mosin_nagant": {
+            "textures": "textures/item/weapons/mosin_nagant"
         }
     },
     "texture_name": "atlas.items"

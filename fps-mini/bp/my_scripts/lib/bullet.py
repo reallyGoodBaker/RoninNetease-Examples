@@ -9,9 +9,10 @@ from ..engine.architect.compact import (
     clientApi, compClient, localPlayerId,
     Curve, getBonePosition,
     QueryVariable,
+    epsilon,
 )
 from ..engine.architect.math.utils import entityAabbDef, pointToLineDist, viewToWorld
-from ..engine.architect.math.double import clamp
+from ..engine.architect.math.double import clamp, lerp
 from ..engine.architect.core.configurator import modConf
 from ..engine.architect.utils.enhance.list import find
 
@@ -49,9 +50,16 @@ class BulletBase(object):
 
         self.flying = True
         self.flyTime = 0
-        self.distance = 0
+        self.distance = epsilon
+        self.displacement = 0
         self.damageRemains = 1.0
         self.step = -1
+
+        # 本 tick 内用于“按命中位置插值速度”的状态
+        self.tickDt = 0                 # 本 tick 的 dt, 供子段末端速度预估使用
+        self.segmentBeginDist = 0       # 当前插值子段的起点(距本 tick 段首的距离)
+        self.segmentStartSpeed = self.initialSpeed  # 子段起点速度
+        self.segmentEndSpeed = self.initialSpeed    # 子段末端预估速度
 
         x, y, z = self.origin
         self.dFrameTime = 0
@@ -80,6 +88,7 @@ class BulletBase(object):
         currentTime = time.time()
         dt = currentTime - self.prevTime
         self.prevTime = currentTime
+        self.tickDt = dt
         self.flyTime = currentTime - self.createTime
         curVelocity = self.velocity
         self.step += 1
@@ -150,6 +159,8 @@ class BulletBase(object):
         # type: (ClientBulletSystem, Vector3, Vector3, float) -> None
         displacement = v * dt
         dist = modulo(displacement)
+        self.displacement = dist
+        self.segmentBeginDist = 0
         rayCasted = clientApi.getEntitiesOrBlockFromRay(
             tup(pos), tup(normalize(displacement)),
             int(math.ceil(dist)), True, 3
@@ -166,18 +177,65 @@ class BulletBase(object):
         lastHit = None
 
         for result in regularResults:
+            # 每个命中点之前, 用当前速度重算 [segmentBeginDist, D] 子段的插值参数
+            self.prepareSubSegment()
+            hitDist = modulo(vec(result['hitPos']) - pos)
             if result['type'] == 'Block':
                 lastHit = result
+                beforeSpeed = self.speed
                 if self.handleHitBlock(result, clientBullet):
                     break
+                if self.speed != beforeSpeed:
+                    # 穿块成功: 速度已被扣除, 以本命中点作为下一子段起点
+                    self.segmentBeginDist = hitDist
                 continue
             if result['entityId'] == localPlayerId() or result['identifier'] in self.ignoreEntities:
                 continue
             lastHit = result
+            beforeSpeed = self.speed
             if self.handleHitEntity(result, clientBullet, normalize(v)):
                 break
+            if self.speed != beforeSpeed:
+                # 穿实体成功: 以本命中点作为下一子段起点
+                self.segmentBeginDist = hitDist
 
         clientBullet.updateClientVfx(pos, lastHit and vec(lastHit['hitPos']) or pos + displacement, self)
+
+
+    def predictEndSpeed(self, velocity, remaining):
+        # type: (Vector3, float) -> float
+        """沿用 update() 的同一模型(重力每 tick 施加, 阻力按 dt 衰减), 预估剩余段末端速度。
+        remaining: 剩余段占本 tick 位移的比例, 1 表示整段。"""
+        lastVelocity = velocity + self.gravity * remaining
+        lastSpeed = modulo(lastVelocity)
+        speedDecay = self.drag * lastSpeed ** 2 * self.tickDt * remaining
+        return max(lastSpeed - speedDecay, 0)
+
+
+    def prepareSubSegment(self):
+        # type: () -> None
+        """以 segmentBeginDist 为当前子段起点, 用当前速度重算子段起点/末端速度。"""
+        self.segmentStartSpeed = self.speed
+        dist = self.displacement
+        if dist <= epsilon:
+            self.segmentEndSpeed = self.speed
+            return
+        remaining = clamp((dist - self.segmentBeginDist) / dist, 0, 1)
+        self.segmentEndSpeed = self.predictEndSpeed(self.velocity, remaining)
+
+
+    def hitSpeedAt(self, hitPos):
+        # type: (tuple) -> float
+        """按命中点在当前子段内的位置, 线性插值出命中瞬间的速度。"""
+        dist = self.displacement
+        if dist <= epsilon:
+            return self.speed
+        sub = dist - self.segmentBeginDist
+        if sub <= epsilon:
+            return self.segmentStartSpeed
+        hitDist = modulo(vec(hitPos) - self.pos)
+        t = clamp((hitDist - self.segmentBeginDist) / sub, 0, 1)
+        return lerp(self.segmentStartSpeed, self.segmentEndSpeed, t)
 
 
     def handleHitBlock(self, result, clientBullet):
@@ -227,21 +285,22 @@ class BulletBase(object):
         return 
 
 
-    def calcDamage(self, isHeadShot, kinetic, overPun=False):
+    def calcDamage(self, isHeadShot, kinetic, speed):
         headShotMul = (kinetic['headshotMultiplier'] * int(isHeadShot)) or 1
         baseDamage = kinetic['baseDamage']
         damageMul = Asset(kinetic['damageCurve']).load() # type: Curve
-        overpenMul = not overPun and 1 or self.penetrate['damageRetentionPerPass']
-        return baseDamage, damageMul.getValue(self.speed) * overpenMul * headShotMul
+        # 按速度曲线读取伤害倍率
+        return baseDamage, damageMul.getValue(speed) * headShotMul
 
 
     def handlePenetrateEntity(self, entityId, isHeadShot, hitPos, clientBullet):
         # type: (str, bool, tuple, ClientBulletSystem) -> None
-        self.velocity *= self.penetrate['velocityRetentionPerPass']
-        self.speed = modulo(self.velocity)
         kinetic = self.getPayload('kinetic')
         if kinetic:
-            clientBullet.damageEntity(entityId, isHeadShot, self.calcDamage(isHeadShot, kinetic, True), self.caliber, hitPos)
+            # 先用撞击瞬间(穿透衰减之前)的速度结算伤害, 再扣除穿透损耗
+            clientBullet.damageEntity(entityId, isHeadShot, kinetic, hitPos, self)
+        self.velocity *= self.penetrate['velocityRetentionPerPass']
+        self.speed = modulo(self.velocity)
 
 
     def handleKineticPayload(self, entityId, isHeadShot, hitPos, clientBullet):
@@ -249,7 +308,7 @@ class BulletBase(object):
         kinetic =  self.getPayload('kinetic')
         if not kinetic:
             return
-        clientBullet.damageEntity(entityId, isHeadShot, self.calcDamage(isHeadShot, kinetic), self.caliber, hitPos)
+        clientBullet.damageEntity(entityId, isHeadShot, kinetic, hitPos, self)
 
 
 
@@ -279,10 +338,9 @@ class ClientBulletSystem(ClientSubsystem):
         if not bullet.step:
             return
         color = [1, 0, 0]
-        if bullet.speed >= bullet.penetrate['minPenetrateSpeed']:
-            color = [0, 0, 1]
-        elif bullet.getPayload('kinetic'):
-            _, mul = bullet.calcDamage(False, bullet.getPayload('kinetic'))
+        kinetic = bullet.getPayload('kinetic')
+        if kinetic:
+            _, mul = bullet.calcDamage(False, kinetic, bullet.speed)
             multiplier = clamp(mul, 0, 1)
             color[1] = multiplier
             color[0] = 1 - multiplier
@@ -301,13 +359,16 @@ class ClientBulletSystem(ClientSubsystem):
         )
 
 
-    def damageEntity(self, target, isHeadShot, damageInfo, caliber, hitPos):
-        baseDamage, multiplier = damageInfo
+    def damageEntity(self, target, isHeadShot, kinetic, hitPos, bullet):
+        # type: (str, bool, dict, tuple, BulletBase) -> None
+        caliber = bullet.caliber
+        hitSpeed = bullet.hitSpeedAt(hitPos)
+        baseDamage, multiplier = bullet.calcDamage(isHeadShot, kinetic, hitSpeed)
         damage = baseDamage * multiplier
         if self.debug:
             shape = self.drawing.AddSphereShape(hitPos, 1, isHeadShot and (1, 0, 0) or (1, 1, 0))
             addTimer(1, lambda: shape.Remove(), False)
-            self.level.textNotify.SetLeftCornerNotify('{} {}'.format(damage, caliber))
+            self.level.textNotify.SetLeftCornerNotify('\ndmg: {}\ncaliber: {}\nspeed: {}\nfly time: {}\n'.format(damage, caliber, hitSpeed, int(bullet.flyTime * 1000)))
         remote.client.call(
             'BulletServerAuthSystem.tryDamageEntity', target, damage, isHeadShot, caliber
         )
@@ -333,7 +394,7 @@ class ClientBulletSystem(ClientSubsystem):
             and clientApi.GetRotFromDir(self.level.camera.GetForward())     \
             or compClient.CreateRot(localId).GetRot()
         ox, oy = offset
-        dir = vec(clientApi.GetDirFromRot((rx + ox, ry + oy)))
+        dir = vec(clientApi.GetDirFromRot((rx + ox - 0.5, ry + oy)))
         self.createBullet(asset, velocityModifier, dir, pos)
 
 

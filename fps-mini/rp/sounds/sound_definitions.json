@@ -42,6 +42,162 @@
             "sounds": [
                 "sounds/cfkill"
             ]
+        },
+        "gew98.shoot": {
+            "category": "ambient",
+            "sounds": [
+                "sounds/gew98/shoot"
+            ]
+        },
+        "gew98.reload_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gew98/reload_clip"
+            ]
+        },
+        "gew98.bolt_open": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gew98/bolt_open"
+            ]
+        },
+        "gew98.bolt_close": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gew98/bolt_close"
+            ]
+        },
+        "gew98.reload_single": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gew98/reload_single"
+            ]
+        },
+        "smle_mk3.shoot": {
+            "category": "ambient",
+            "sounds": [
+                "sounds/smle_mk3/shoot"
+            ]
+        },
+        "smle_mk3.reload_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/smle_mk3/reload_clip"
+            ]
+        },
+        "smle_mk3.bolt_open": {
+            "category": "ui",
+            "sounds": [
+                "sounds/smle_mk3/bolt_open"
+            ]
+        },
+        "smle_mk3.bolt_close": {
+            "category": "ui",
+            "sounds": [
+                "sounds/smle_mk3/bolt_close"
+            ]
+        },
+        "smle_mk3.reload_single": {
+            "category": "ui",
+            "sounds": [
+                "sounds/smle_mk3/reload_single"
+            ]
+        },
+        "ross_mk3.shoot": {
+            "category": "ambient",
+            "sounds": [
+                "sounds/ross_mk3/shoot"
+            ]
+        },
+        "ross_mk3.reload_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/ross_mk3/reload_clip"
+            ]
+        },
+        "ross_mk3.bolt_open": {
+            "category": "ui",
+            "sounds": [
+                "sounds/ross_mk3/bolt_open"
+            ]
+        },
+        "ross_mk3.bolt_close": {
+            "category": "ui",
+            "sounds": [
+                "sounds/ross_mk3/bolt_close"
+            ]
+        },
+        "ross_mk3.reload_single": {
+            "category": "ui",
+            "sounds": [
+                "sounds/ross_mk3/reload_single"
+            ]
+        },
+        "berthier_m1916.shoot": {
+            "category": "ambient",
+            "sounds": [
+                "sounds/berthier_m1916/shoot"
+            ]
+        },
+        "berthier_m1916.reload_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/berthier_m1916/reload_clip"
+            ]
+        },
+        "berthier_m1916.bolt_open": {
+            "category": "ui",
+            "sounds": [
+                "sounds/berthier_m1916/bolt_open"
+            ]
+        },
+        "berthier_m1916.bolt_close": {
+            "category": "ui",
+            "sounds": [
+                "sounds/berthier_m1916/bolt_close"
+            ]
+        },
+        "berthier_m1916.drop_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/berthier_m1916/drop_clip"
+            ]
+        },
+        "carcano_m1891.shoot": {
+            "category": "ui",
+            "sounds": [
+                "sounds/carcano_m1891/shoot"
+            ]
+        },
+        "gewehr_m95.shoot": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gewehr_m95/shoot"
+            ]
+        },
+        "gewehr_m95.bolt_open": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gewehr_m95/bolt_open"
+            ]
+        },
+        "gewehr_m95.bolt_close": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gewehr_m95/bolt_close"
+            ]
+        },
+        "gewehr_m95.loaded": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gewehr_m95/loaded"
+            ]
+        },
+        "gewehr_m95.drop_clip": {
+            "category": "ui",
+            "sounds": [
+                "sounds/gewehr_m95/drop_clip"
+            ]
         }
     }
 }

@@ -9,7 +9,7 @@ from ...lib.feature import LocalFeaturesComponent
 @Dispatch('animation.weapons.bolt.bayonet.execute')
 class BayonetExecuteDispatcher(BaseActionDispatcher):
     def notifyAttckStart(self, entity, animEx):
-        hurts = boxOverlap3dForward(entity, (4, 4, 5), True)
+        hurts = boxOverlap3dForward(entity, (4, 4, 5))
         if len(hurts) == 0:
             return
 

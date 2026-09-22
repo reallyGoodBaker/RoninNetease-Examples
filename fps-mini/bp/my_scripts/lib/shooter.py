@@ -550,9 +550,10 @@ class ShooterSystem(ClientSubsystem):
         if self.hasFeature('walk'):
             baseSpread += isMoving and self.weapon.modify(stats.walkSpread) or 0
         self.shooterVfx.movementSpread = baseSpread
+        self.shooterVfx.minSpread = self.weapon.modify(stats.spread)['minSpread']
 
     def decaySpread(self):
-        decay = self.weapon.barrel['spread']['decay']
+        decay = self.weapon.modify(stats.spread)['decay']
         shootSpread = max(0, self.weapon.shootSpread - decay * math.log(self.idleDuration * decay + 1))
         self.shooterVfx.shootSpread = shootSpread
         self.weapon.shootSpread = shootSpread

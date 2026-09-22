@@ -1,0 +1,32 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.dropped_weapon.gewehr_m95": {
+            "loop": true,
+            "bones": {
+                "fpsroot": {
+                    "position": [
+                        -3.094,
+                        -24.136,
+                        11.98
+                    ],
+                    "rotation": [
+                        0,
+                        0,
+                        90
+                    ],
+                    "scale": 0.561
+                },
+                "clip": {
+                    "scale": 0
+                },
+                "clip2": {
+                    "scale": 0
+                },
+                "clip_bullets": {
+                    "scale": 0
+                }
+            }
+        }
+    }
+}

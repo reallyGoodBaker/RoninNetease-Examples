@@ -3,6 +3,17 @@ item.roninexample:bolt.name=SMLE MKⅢ
 item.roninexample:sniper.name=SMLE MKⅢ 狙击手
 item.roninexample:auto.name=MP18
 
+craftingScreen.tab.standard_rifles=制式步枪
+
+item.ww1:smle_mk3.name=SMLE MKⅢ
+item.ww1:smle_mk3_sniper.name=SMLE MKⅢ 狙击手
+item.ww1:ross_mk3.name=ROSS MKⅢ
+item.ww1:gewehr98.name=Gewehr 98
+item.ww1:berthier_m1916.name=贝蒂埃 M1916
+item.ww1:carcano_m1891.name=卡尔卡诺 M1891
+item.ww1:gewehr_m95.name=Gewehr M.95
+item.ww1:mosin_nagant.name=莫辛纳甘 M1891
+
 slot.bayonet.name=刺刀
 slot.fov_scale.name=视野缩放
 slot.fov1x.name=1 倍
@@ -15,3 +26,7 @@ slot.telescope10x.name=十倍光学瞄具
 slot.magazine.name=弹匣
 slot.mp18_normal_magazine.name=MP18 20发弹匣
 slot.mp18_drum_magazine.name=MP18 30发弹鼓
+slot.skill.name=技术
+slot.obrez.name=Obrez (手炮)
+
+attachment.smle_mk3_quick_shoot.name=快速射击

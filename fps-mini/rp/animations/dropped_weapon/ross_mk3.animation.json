@@ -1,0 +1,32 @@
+{
+    "format_version": "1.8.0",
+    "animations": {
+        "animation.dropped_weapon.ross_mk3": {
+            "loop": true,
+            "bones": {
+                "fpsroot": {
+                    "position": [
+                        -2.36,
+                        -23.088,
+                        13.532
+                    ],
+                    "rotation": [
+                        0,
+                        0,
+                        90
+                    ],
+                    "scale": 0.735
+                },
+                "clip": {
+                    "scale": 0
+                },
+                "clip_single": {
+                    "scale": 0
+                },
+                "clip_bullets": {
+                    "scale": 0
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "format_version": "1.10",
+    "minecraft:item": {
+        "components": {
+            "minecraft:icon": "ww1:gewehr_m95"
+        },
+        "description": {
+            "identifier": "ww1:gewehr_m95"
+        }
+    }
+}

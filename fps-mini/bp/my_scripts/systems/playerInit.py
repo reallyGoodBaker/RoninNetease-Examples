@@ -110,3 +110,7 @@ class PlayerShooterInitSystem(ClientSubsystem):
 
         if ev.actionType == 9 or ev.actionType == 10:
             self.shooter.changeSprinting()
+
+    @EventListener()
+    def onEntitySpawn(self, ev=events.AddEntityClientEvent()):
+        compClient.CreateActorRender(ev.id).SetEntityRenderDistance(150)

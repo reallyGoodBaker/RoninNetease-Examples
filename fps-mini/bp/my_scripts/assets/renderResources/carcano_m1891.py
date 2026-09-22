@@ -1,0 +1,29 @@
+Asset = {
+    'model': 'geometry.ww1.carcano_m1891',
+    'third_model': 'geometry.template.third.bolt',
+    'arms': 'geometry.arms.carcano_m1891',
+    'materials': {
+        'weapon': 'pbr_tint',
+        'glow': 'entity_emissive_alpha',
+        'scope': 'scope',
+        'eyepiece': 'eyepiece',
+    },
+    'texture': 'textures/entity/weapons/carcano_m1891',
+    'metalTexture': 'textures/entity/weapons/carcano_m1891_metal',
+    'render': {
+        'first_person': [
+            'controller.render.template.weapon',
+            'controller.render.first_person.arm'
+        ],
+        'third_person': [
+            'controller.render.third_person.torso',
+            'controller.render.third_person.weapon'
+        ]
+    },
+    'sounds': {
+        'reload_clip': 'berthier_m1916.reload_clip',
+        'bolt_open': 'berthier_m1916.bolt_open',
+        'bolt_close': 'berthier_m1916.bolt_close',
+        'drop_clip': 'berthier_m1916.drop_clip',
+    }
+}

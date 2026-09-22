@@ -1,0 +1,32 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "template:dropped_gewehr98",
+            "materials": {
+                "weapon": "pbr_tint",
+                "glow": "entity_emissive_alpha",
+                "scope": "scope",
+                "eyepiece": "eyepiece"
+            },
+            "textures": {
+                "weapon": "textures/entity/weapons/gewehr98",
+                "metal": "textures/entity/weapons/gewehr98_metal"
+            },
+            "geometry": {
+                "default": "geometry.ww1.gewehr98"
+            },
+            "animations": {
+                "place": "animation.dropped_weapon.gewehr98"
+            },
+            "scripts": {
+                "animate": [
+                    "place"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.template.weapon"
+            ]
+        }
+    }
+}

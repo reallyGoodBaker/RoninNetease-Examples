@@ -1,0 +1,32 @@
+{
+    "format_version": "1.12.0",
+    "minecraft:client_entity": {
+        "description": {
+            "identifier": "template:dropped_berthier_m1916",
+            "materials": {
+                "weapon": "pbr_tint",
+                "glow": "entity_emissive_alpha",
+                "scope": "scope",
+                "eyepiece": "eyepiece"
+            },
+            "textures": {
+                "weapon": "textures/entity/weapons/berthier_m1916",
+                "metal": "textures/entity/weapons/berthier_m1916_metal"
+            },
+            "geometry": {
+                "default": "geometry.ww1.berthier_m1916"
+            },
+            "animations": {
+                "place": "animation.dropped_weapon.berthier_m1916"
+            },
+            "scripts": {
+                "animate": [
+                    "place"
+                ]
+            },
+            "render_controllers": [
+                "controller.render.template.weapon"
+            ]
+        }
+    }
+}
